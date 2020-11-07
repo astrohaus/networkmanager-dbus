@@ -13,7 +13,8 @@ async function start() {
     //     console.log(`Properties for ${device}:`);
     //     console.log(properties);
     // });
-    networkManager.getDiscoveredWifiNetworks();
+    let wifiNetworks = await networkManager.getDiscoveredWifiNetworks();
+    console.log(wifiNetworks);
 }
 
 start();
