@@ -90,8 +90,8 @@ export class NetworkManager {
         this.bus = DBus.getBus('system');
     }
 
-    public getDiscoveredWifiNetworks(): Promise<any> {
-        return new Promise<any>(async (resolve, reject) => {
+    public getDiscoveredWifiNetworks(): Promise<WifiNetwork[]> {
+        return new Promise<WifiNetwork[]>(async (resolve, reject) => {
             let accessPoints = await this.getAccessPoints();
             let wifiNetworks: WifiNetwork[] = [];
 
@@ -127,22 +127,64 @@ export class NetworkManager {
         });
     }
 
-    public async getAccessPoints(): Promise<AccessPoint[]> {
+    public addConnection(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+
+        });
+    }
+
+    public requestScan(): Promise<any> {
         return new Promise<any>(async (resolve, reject) => {
+            let wirelessDevice = await this.getWifiDevice();
+            if(wirelessDevice) {
+                let wirelessDeviceInterface = await this.getInterface(wirelessDevice, 'org.freedesktop.NetworkManager.Device.Wireless');
+                wirelessDeviceInterface.RequestScan({}, (err: any, result: any) => {
+                    if(err) {
+                        reject(`Scan Error: ${err}`);
+                        return;
+                    } else {
+                        console.log("scan result:");
+                        console.log(result);
+                    }
+
+                });
+            }
+        });
+    }
+
+    public async setupAccessPointEvents() {
+        let wifiDevice = await this.getWifiDevice();
+        if(wifiDevice) {
+            let wirelessDeviceInterface = await this.getInterface(wifiDevice, 'org.freedesktop.NetworkManager.Device.Wireless');
+            wirelessDeviceInterface.on('AccessPointAdded', (event:any) => {
+                console.log("access point added:");
+                console.log(event);
+            });
+        }
+    }
+
+    private async getWifiDevice(): Promise<Device | null> {
+        return new Promise<Device | null>(async (resolve, reject) => {
             let devices = await this.getAllDevices();
-            let wifiDevice: Device | null = null;
 
             const forLoop = async () => {
                 for(let index = 0; index < devices.length; index++) {
                     let deviceProperties = await this.getAllProperiesForDevice(devices[index]);
-    
+
                     if(deviceProperties.DeviceType === DeviceType.WIFI) {
-                        wifiDevice = devices[index];
+                        resolve(devices[index]);
                     }
                 }
             }
 
             await forLoop();
+            resolve(null);
+        });
+    }
+
+    private async getAccessPoints(): Promise<AccessPoint[]> {
+        return new Promise<any>(async (resolve, reject) => {
+            let wifiDevice = await this.getWifiDevice();
 
             if(wifiDevice) {
                 let wifiInterface = await this.getInterface(wifiDevice, 'org.freedesktop.NetworkManager.Device.Wireless');
@@ -175,33 +217,33 @@ export class NetworkManager {
         )});
     }
 
-    public async getActiveConnections(): Promise<Connection[]> {
-        return new Promise<string[]>(async (resolve, reject) => {
-            let networkManager = await this.getInterface('/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
-            networkManager.getProperty('ActiveConnections', (err, result) => {
-                if(err) {
-                    reject(`Get Active Connections Err: ${err}`);
-                } else {
-                    resolve(result as unknown as Connection[]);
-                }
-            });
-        });
-    }
+    // public async getActiveConnections(): Promise<Connection[]> {
+    //     return new Promise<string[]>(async (resolve, reject) => {
+    //         let networkManager = await this.getInterface('/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
+    //         networkManager.getProperty('ActiveConnections', (err, result) => {
+    //             if(err) {
+    //                 reject(`Get Active Connections Err: ${err}`);
+    //             } else {
+    //                 resolve(result as unknown as Connection[]);
+    //             }
+    //         });
+    //     });
+    // }
 
-    public async getDevicesForConnection(connectionPath: Connection): Promise<Device[]> {
-        return new Promise<Device[]>(async (resolve, reject) => {
-            let activeConnection = await this.getInterface(connectionPath, 'org.freedesktop.NetworkManager.Connection.Active');
-            activeConnection.getProperty("Devices", (err, result) => {
-                if(err) {
-                    reject(`Get device err: ${err}`);
-                } else {
-                    resolve(result as unknown as Device[]);
-                }
-            });
-        });
-    }
+    // public async getDevicesForConnection(connectionPath: Connection): Promise<Device[]> {
+    //     return new Promise<Device[]>(async (resolve, reject) => {
+    //         let activeConnection = await this.getInterface(connectionPath, 'org.freedesktop.NetworkManager.Connection.Active');
+    //         activeConnection.getProperty("Devices", (err, result) => {
+    //             if(err) {
+    //                 reject(`Get device err: ${err}`);
+    //             } else {
+    //                 resolve(result as unknown as Device[]);
+    //             }
+    //         });
+    //     });
+    // }
 
-    public async getAllProperiesForDevice(devicePath: Device): Promise<any> {
+    private async getAllProperiesForDevice(devicePath: Device): Promise<any> {
         return new Promise<any>(async (resolve, reject) => {
             let device = await this.getInterface(devicePath, 'org.freedesktop.NetworkManager.Device');
             device.getProperties(async (err, properties) => {
@@ -214,7 +256,7 @@ export class NetworkManager {
         })
     }
 
-    public async getAllDevices(): Promise<Device[]> {
+    private async getAllDevices(): Promise<Device[]> {
         return new Promise<Device[]>(async (resolve, reject) => {
             let networkManager = await this.getInterface('/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
             networkManager.GetAllDevices({}, function(err: string, devices: Device[]) {

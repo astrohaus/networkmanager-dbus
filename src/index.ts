@@ -14,6 +14,8 @@ async function start() {
     //     console.log(properties);
     // });
     let wifiNetworks = await networkManager.getDiscoveredWifiNetworks();
+    networkManager.setupAccessPointEvents();
+    networkManager.requestScan();
     console.log(wifiNetworks);
 }
 
