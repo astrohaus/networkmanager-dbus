@@ -1,4 +1,5 @@
 import DBus from "dbus";
+import { BehaviorSubject, Observable } from "rxjs";
 
 export interface WifiNetwork {
     ssid: string;
@@ -6,6 +7,8 @@ export interface WifiNetwork {
     strength: number;
     encrypted: boolean;
     supportsWPS: boolean;
+    macAddress: string;
+    seen: boolean;
 }
 
 export enum DeviceType {
@@ -86,55 +89,42 @@ export class NetworkManager {
     //wifiDevice: Device;
     //ethernetDevice: Device;
 
+    private _connectedNetwork: BehaviorSubject<WifiNetwork | null>;
+    public connectedNetwork: Observable<WifiNetwork | null>;
+
+    private _localNetworks: {
+        [key: string]: WifiNetwork;
+    }
+    private _localNetworksSubject: BehaviorSubject<WifiNetwork[]>;
+    public localNetworks: Observable<WifiNetwork[]>;
+
     constructor() {
         this.bus = DBus.getBus('system');
+
+        this._connectedNetwork = new BehaviorSubject<WifiNetwork | null>(null);
+        this.connectedNetwork = this._connectedNetwork.asObservable();
+
+        this._localNetworks = {};
+        this._localNetworksSubject = new BehaviorSubject<WifiNetwork[]>([]);
+        this.localNetworks = this._localNetworksSubject.asObservable();
     }
 
-    public getDiscoveredWifiNetworks(): Promise<WifiNetwork[]> {
-        return new Promise<WifiNetwork[]>(async (resolve, reject) => {
-            let accessPoints = await this.getAccessPoints();
-            let wifiNetworks: WifiNetwork[] = [];
-
-            const forLoop = async () => {
-                for(let i = 0; i < accessPoints.length; i++) {
-                    let accessPoint = await this.getInterface(accessPoints[i], 'org.freedesktop.NetworkManager.AccessPoint');
-                    accessPoint.getProperties((err, properties) => {
-                        if(err) {
-                            reject(`Error getting access point properties: ${err}`);
-                            return;
-                        } else {
-                            let ssidString: string = this.byteArrayToString(properties.Ssid);
-                            let frequency: number = +(properties.Frequency / 1000).toFixed(1);
-                            let strength: number = Math.ceil(+properties.Strength / 20) - 1;
-                            let encrypted: boolean = (properties.Flags & WpaFlags.PRIVACY) > 0;
-                            let supportsWPS: boolean = (properties.Flags & WpaFlags.WPS) > 0;
-
-                            wifiNetworks.push({
-                                ssid: ssidString,
-                                frequency: frequency,
-                                strength: strength,
-                                encrypted: encrypted,
-                                supportsWPS: supportsWPS
-                            });
-                        }
-                    });
-                }
-            }
-
-            await forLoop();
-
-            resolve(wifiNetworks);
-        });
+    public async start() {
+        await this.setupNetworkManagerEvents();
+        await this.setupAccessPointEvents();
+        await this.initLocalNetworks();
+        this.getSavedWifiConnections();
+        this._localNetworksSubject.next(Object.values(this._localNetworks));
     }
 
-    public addConnection(): Promise<any> {
+    public addConnection(ssid: string, password:  string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
 
         });
     }
 
-    public requestScan(): Promise<any> {
-        return new Promise<any>(async (resolve, reject) => {
+    public async requestScan(): Promise<null> {
+        return new Promise<null>(async (resolve, reject) => {
             let wirelessDevice = await this.getWifiDevice();
             if(wirelessDevice) {
                 let wirelessDeviceInterface = await this.getInterface(wirelessDevice, 'org.freedesktop.NetworkManager.Device.Wireless');
@@ -143,24 +133,111 @@ export class NetworkManager {
                         reject(`Scan Error: ${err}`);
                         return;
                     } else {
-                        console.log("scan result:");
-                        console.log(result);
+                        resolve();
                     }
-
                 });
             }
         });
     }
 
-    public async setupAccessPointEvents() {
+    private async initLocalNetworks(): Promise<null> {
+        return new Promise<null>(async (resolve, reject) => {
+            let accessPoints = await this.getAccessPoints();
+
+            const forLoop = async () => {
+                for(let i = 0; i < accessPoints.length; i++) {
+                    let wifiNetwork = await this.getAccessPointProperties(accessPoints[i]);
+                    this._localNetworks[accessPoints[i]] = wifiNetwork;
+                }
+            }
+
+            await forLoop();
+            resolve();
+        });
+    }
+
+    private async getSavedWifiConnections() {
+        let settingsInterface = await this.getInterface('/org/freedesktop/NetworkManager/Settings', 'org.freedesktop.NetworkManager.Settings');
+        settingsInterface.getProperty("Connections", async (err, settingsPaths) => {
+            if(err) {
+                console.error(err);
+                return;
+            }
+
+            console.log("Saved connections:");
+            const forLoop = async () => {
+                for(let i = 0; i < settingsPaths.length; i++) {
+                    let connectionSettingsInterface = await this.getInterface(settingsPaths[i], 'org.freedesktop.NetworkManager.Settings.Connection');
+                    connectionSettingsInterface.GetSettings({}, (err: any, settings: any) => {
+                        if(err) {
+                            console.error(err);
+                        } else {
+                            console.log(`Settings for ${settingsPaths[i]}:`);
+                           if(settings['802-11-wireless']) {
+                               settings['802-11-wireless'].ssid = this.byteArrayToString(settings['802-11-wireless'].ssid);
+                               console.log(settings);
+                           }
+                        }
+                    });
+                }
+            }
+
+            await forLoop();
+
+        });
+    }
+
+    private async setupNetworkManagerEvents() {
+        let networkManagerInterface = await this.getInterface('/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
+        networkManagerInterface.on('StateChanged', (event: any) => {
+            console.log(`State changed:`);
+            console.log(event);
+        });
+    }
+
+    private async setupAccessPointEvents() {
         let wifiDevice = await this.getWifiDevice();
         if(wifiDevice) {
             let wirelessDeviceInterface = await this.getInterface(wifiDevice, 'org.freedesktop.NetworkManager.Device.Wireless');
-            wirelessDeviceInterface.on('AccessPointAdded', (event:any) => {
-                console.log("access point added:");
-                console.log(event);
+            wirelessDeviceInterface.on('AccessPointAdded', async (accessPointPath: string) => {
+                let wifiNetwork = await this.getAccessPointProperties(accessPointPath);
+                this._localNetworks[accessPointPath] = wifiNetwork;
+                this._localNetworksSubject.next(Object.values(this._localNetworks));
             });
+
+            wirelessDeviceInterface.on('AccessPointRemoved', (accessPointPath: string) => {
+                console.log("access point removed:");
+                console.log(accessPointPath);
+                console.log(this._localNetworks);
+                if(this._localNetworks[accessPointPath]) {
+                    delete this._localNetworks[accessPointPath];
+                }
+                this._localNetworksSubject.next(Object.values(this._localNetworks));
+            });
+        } else {
+            console.error("No wifi device");
         }
+    }
+
+    private async getAccessPointProperties(accessPointPath: string): Promise<any> {
+        return new Promise<any>(async (resolve, reject) => {
+            let accessPoint = await this.getInterface(accessPointPath, 'org.freedesktop.NetworkManager.AccessPoint');
+            accessPoint.getProperties((err, properties) => {
+                if(err) {
+                    reject(`Error getting access point properties: ${err}`);
+                    return;
+                } else {
+                    properties.Ssid = this.byteArrayToString(properties.Ssid);
+                    let lowercaseProps: any = {};
+                    for (const [key, value] of Object.entries(properties)) {
+                        let camelcaseKey: string = key.charAt(0).toLowerCase() + key.slice(1);
+                        lowercaseProps[camelcaseKey] = value;
+                    }
+
+                    resolve(lowercaseProps);
+                }
+            });
+        })
     }
 
     private async getWifiDevice(): Promise<Device | null> {
