@@ -66,7 +66,25 @@ export enum WirelessMode {
     MESH    = 4, // the device is a 802.11s mesh point. Since: 1.20.
 }
 
-export type ConnectionPath = string;
+export interface AccessPoint {
+    flags: number,
+    wpaFlags: number,
+    rsnFlags: number,
+    ssid: string,
+    frequency: number,
+    hwAddress: string,
+    mode: number,
+    maxBitrate: number,
+    strength: number,
+    lastSeen: number,
+    accessPointPath: AccessPointPath,
+    connectionSettingsCandidates: ConnectionSettingsPath[]
+}
+
+export type ConnectionSettings = any;
+
+export type ConnectionSettingsPath = string;
 export type DevicePath = string;
 export type AccessPointPath = string;
 export type SettingsPath = string;
+export type Ssid = string;
