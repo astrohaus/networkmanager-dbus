@@ -9,7 +9,7 @@ export async function objectInterface(bus: DBus.DBusConnection, objectPath: stri
             interfaceName,
             (err: any, iface: DBus.DBusInterface) => {
                 if(err) {
-                    reject(`Interface error: ${err}`);
+                    reject(`Error getting ${interfaceName} interface on ${objectPath}: ${err}`);
                 } else {
                     resolve(iface);
                 }
@@ -34,13 +34,11 @@ export function signal(objectInterface: DBus.DBusInterface, signalName: string):
 
 export async function call(objectInterface: DBus.DBusInterface, methodName: string, options: any, ...args: any[]): Promise<any> {
     return new Promise<any>(((resolve, reject) => {
-        console.log(`calling ${methodName} on ${objectInterface.interfaceName}`);
         if(args.length) {
             objectInterface[methodName](args, options, (err: string, result: any) => {
                 if(err) {
                     reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
                 } else {
-                    console.log(`called ${methodName} on ${objectInterface.interfaceName}`);
                     resolve(result);
                 }
             });
@@ -49,7 +47,6 @@ export async function call(objectInterface: DBus.DBusInterface, methodName: stri
                 if(err) {
                     reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
                 } else {
-                    console.log(`called ${methodName} on ${objectInterface.interfaceName}`);
                     resolve(result);
                 }
             });
@@ -61,7 +58,7 @@ export async function getProperty(objectInterface: DBus.DBusInterface, propertyN
     return new Promise<any>((resolve, reject) => {
         objectInterface.getProperty(propertyName, (err, result) => {
             if(err) {
-                reject(err);
+                reject(`Error getting property ${propertyName} on ${objectInterface.interfaceName} interface for object ${objectInterface.objectPath}: ${err}`);
             } else {
                 resolve(result);
             }
@@ -73,7 +70,7 @@ export async function getAllProperties(objectInterface: DBus.DBusInterface): Pro
     return new Promise<any>((resolve, reject) => {
         objectInterface.getProperties((err, result) => {
             if(err) {
-                reject(err);
+                reject(`Error getting all properties for object ${objectInterface.objectPath} with interface ${objectInterface.interfaceName}: ${err}`);
             } else {
                 resolve(result);
             }

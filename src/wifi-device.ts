@@ -2,7 +2,7 @@ import DBus from "dbus";
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
 import { AccessPoint } from "./dbus-types";
-import { call, getAllProperties, getProperty, objectInterface, signal } from "./util";
+import { byteArrayToString, call, getAllProperties, getProperty, objectInterface, signal } from "./util";
 
 type AccessPointMap = {
     [key: string]: AccessPoint
@@ -23,6 +23,13 @@ export class WifiDevice {
     public get properties(): any {
         return this._properties;
     }
+
+    private _accessPoints: AccessPointMap;
+    private _accessPointsSubject: BehaviorSubject<AccessPoint[]>;
+    public accessPoints$: Observable<AccessPoint[]>;
+    public get accessPoints(): AccessPoint[] {
+        return Object.values(this._accessPoints);
+    }
     
     private constructor(
         bus: DBus.DBusConnection,
@@ -30,7 +37,8 @@ export class WifiDevice {
         deviceInterface: DBus.DBusInterface,
         wifiDeviceInterface: DBus.DBusInterface,
         propertiesInterface: DBus.DBusInterface,
-        initialProperties: any
+        initialProperties: any,
+        initialAccessPoints: AccessPointMap
         ) {
 
             this._bus = bus;
@@ -44,30 +52,48 @@ export class WifiDevice {
             this._propertiesSubject = new BehaviorSubject<any>(this._properties);
             this.properties$ = this._propertiesSubject.asObservable();
 
-            this._listenForDeviceStateChanges();
+            this._accessPoints = initialAccessPoints;
+            this._accessPointsSubject = new BehaviorSubject<AccessPoint[]>(Object.values(this._accessPoints));
+            this.accessPoints$ = this._accessPointsSubject.asObservable();
+
             this._listenForPropertyChanges();
+            this._listenForAccessPoints();
     }
 
-    public static async init(bus: DBus.DBusConnection, wifiDevicePath: string): Promise<WifiDevice> {
+    public static async init(bus: DBus.DBusConnection, devicePath: string): Promise<WifiDevice> {
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
-                let deviceInterface = await objectInterface(bus, wifiDevicePath, 'org.freedesktop.NetworkManager.Device');
-                let wifiDeviceInterface = await objectInterface(bus, wifiDevicePath, 'org.freedesktop.NetworkManager.Device.Wireless');
-                let propertiesInterface = await objectInterface(bus, wifiDevicePath, 'org.freedesktop.DBus.Properties');
+                let deviceInterface = await objectInterface(bus, devicePath, 'org.freedesktop.NetworkManager.Device');
+                let wifiDeviceInterface = await objectInterface(bus, devicePath, 'org.freedesktop.NetworkManager.Device.Wireless');
+                let propertiesInterface = await objectInterface(bus, devicePath, 'org.freedesktop.DBus.Properties');
                 
                 let deviceProperties = await getAllProperties(deviceInterface);
                 let wifiDeviceProperties = await getAllProperties(wifiDeviceInterface);
 
                 let initialProperties = {...deviceProperties, ...wifiDeviceProperties};
+
+                let initialAccessPoints: AccessPointMap = {};
+                const getAccessPointDataFromPaths = async () => {
+                    for(let i = 0; i < wifiDeviceProperties.AccessPoints.length; i++) {
+                        let accessPointPath = wifiDeviceProperties.AccessPoints[i];
+                        let accessPointInterface = await objectInterface(bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
+                        let accessPointProperties = await getAllProperties(accessPointInterface);
+                        accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
+                        initialAccessPoints[accessPointPath] = accessPointProperties as unknown as AccessPoint;
+                    }
+                }
+
+                await getAccessPointDataFromPaths();
         
                 resolve(
                     new WifiDevice(
                         bus,
-                        wifiDevicePath,
+                        devicePath,
                         deviceInterface,
                         wifiDeviceInterface,
                         propertiesInterface,
-                        initialProperties
+                        initialProperties,
+                        initialAccessPoints
                     )
                 );
             } catch(error) {
@@ -95,14 +121,25 @@ export class WifiDevice {
         })
     }
 
-    private _listenForDeviceStateChanges() {
-        signal(this._deviceInterface, "StateChanged").subscribe(stateChange => {
-            console.log("Wifi device changed state:");
-            console.log(stateChange);
-        })
+    private _listenForAccessPoints() {
+        signal(this._wifiDeviceInterface, "AccessPointAdded").subscribe(async accessPointPath => {
+            try {
+                let accessPointInterface = await objectInterface(this._bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
+                let accessPointProperties = await getAllProperties(accessPointInterface);
+                accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
+                this._accessPoints[accessPointPath] = accessPointProperties;
+                this._accessPointsSubject.next(Object.values(this._accessPoints));
+            } catch(_) {
+                // sometimes the access points get added/removed too quickly to get data
+                // if we can't get data for a particular access point, just ignore it
+            }
+            
+        });
+
+        signal(this._wifiDeviceInterface, "AccessPointRemoved").subscribe(async accessPointPath => {
+            delete this._accessPoints[accessPointPath];
+            this._accessPointsSubject.next(Object.values(this._accessPoints));
+        });
     }
-
-
-
 
 }

@@ -82,7 +82,6 @@ export interface AccessPoint {
 }
 
 export type ConnectionSettings = any;
-
 export type ConnectionSettingsPath = string;
 export type DevicePath = string;
 export type AccessPointPath = string;

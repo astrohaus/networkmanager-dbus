@@ -1,30 +1,21 @@
-import { NetworkManager } from "./network-manager";
-import { WifiDevice } from "./wifi-device";
+import { NetworkManager } from './network-manager';
+import { WifiDevice } from './wifi-device';
+import { EthernetDevice } from './ethernet-device';
+import { 
+    AccessPoint,
+    WpaFlags,
+    SecurityFlags,
+    AccessPointPath,
+    ConnectionSettingsPath
+} from './dbus-types';
 
-require('source-map-support').install();
-
-console.log("what the heck iis uuuuup");
-
-let networkManager: NetworkManager;
-let wifiDevice: WifiDevice;
-
-async function start() {
-    networkManager = await NetworkManager.init();
-    networkManager.properties$.subscribe(properties => {
-        console.log("Network manager properties observable:");
-        console.log(properties);
-    });
-
-
-    wifiDevice = await networkManager.wifiDevice();
-
-    wifiDevice.properties$.subscribe(properties => {
-        console.log("Wifi device properties observable:");
-        console.log(properties);
-    });
+export {
+    NetworkManager,
+    WifiDevice,
+    EthernetDevice,
+    AccessPoint,
+    WpaFlags,
+    SecurityFlags,
+    AccessPointPath,
+    ConnectionSettingsPath
 }
-
-
-start();
-
-console.log('heyas');

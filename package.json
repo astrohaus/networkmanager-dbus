@@ -1,13 +1,17 @@
 {
-  "name": "dbus-networkmanager",
+  "name": "networkmanager-dbus",
   "version": "0.1.0",
   "description": "A network manager for dbus",
-  "main": "dist/index.js",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
   "scripts": {
+    "build": "tsc -p tsconfig-esm.json && tsc -p tsconfig-cjs.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsc && node dist/index.js",
-    "dev": "concurrently \"tsc -w\" \"nodemon dist/index.js\""
+    "prepublish": "npm run tsc"
   },
+  "files": [
+    "lib/"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
