@@ -1,4 +1,4 @@
-import DBus from "dbus";
+import DBus = require("dbus");
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
 import { AccessPoint } from "./dbus-types";

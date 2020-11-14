@@ -2,30 +2,35 @@
   "name": "networkmanager-dbus",
   "version": "0.1.0",
   "description": "A network manager for dbus",
-  "main": "lib/cjs/index.js",
-  "module": "lib/esm/index.js",
+  "author": "Bailey Blankenship <bailey.blankenship@dropworks.com>",
+  "main": "lib/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig-esm.json && tsc -p tsconfig-cjs.json",
+    "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "npm run tsc"
+    "prepublish": "npm run build"
   },
   "files": [
     "lib/"
   ],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/dropworks-oss/networkmanager-dbus"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@types/dbus": "^1.0.1",
     "@types/uuid": "^8.3.0",
     "concurrently": "^5.3.0",
     "nodemon": "^2.0.6",
     "source-map-support": "^0.5.19",
-    "typescript": "^4.0.5"
+    "typescript": "^3.4.4"
   },
   "dependencies": {
-    "@types/node": "^14.14.7",
     "dbus": "^1.0.7",
     "rxjs": "^6.6.3",
     "uuid": "^8.3.1"
-  }
+  },
+  "os": [
+    "!win32"
+  ]
 }

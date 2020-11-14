@@ -1,4 +1,4 @@
-import DBus from "dbus";
+import DBus = require("dbus");
 import { BehaviorSubject, Observable } from "rxjs";
 import { DeviceType } from "./dbus-types";
 import { EthernetDevice } from "./ethernet-device";

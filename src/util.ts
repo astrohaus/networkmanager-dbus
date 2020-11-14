@@ -1,4 +1,4 @@
-import DBus from "dbus";
+import DBus = require("dbus");
 import { Observable } from "rxjs";
 
 export async function objectInterface(bus: DBus.DBusConnection, objectPath: string, interfaceName: string): Promise<DBus.DBusInterface> {
