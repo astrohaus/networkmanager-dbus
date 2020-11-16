@@ -3,8 +3,15 @@ import { WifiDevice } from './wifi-device';
 import { EthernetDevice } from './ethernet-device';
 import { 
     AccessPoint,
+    NetworkManagerProperties,
+    EthernetDeviceProperties,
+    WifiDeviceProperties,
     WpaFlags,
     SecurityFlags,
+    DeviceState,
+    DeviceStateReason,
+    NetworkManagerState,
+    Metered,
     AccessPointPath,
     ConnectionSettingsPath
 } from './dbus-types';
@@ -14,8 +21,15 @@ export {
     WifiDevice,
     EthernetDevice,
     AccessPoint,
+    NetworkManagerProperties,
+    EthernetDeviceProperties,
+    WifiDeviceProperties,
     WpaFlags,
     SecurityFlags,
+    DeviceState,
+    DeviceStateReason,
+    NetworkManagerState,
+    Metered,
     AccessPointPath,
     ConnectionSettingsPath
 }

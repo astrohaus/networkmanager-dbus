@@ -1,7 +1,7 @@
 import DBus = require("dbus");
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
-import { AccessPoint } from "./dbus-types";
+import { AccessPoint, WifiDeviceProperties } from "./dbus-types";
 import { byteArrayToString, call, getAllProperties, getProperty, objectInterface, signal } from "./util";
 
 type AccessPointMap = {
@@ -17,9 +17,9 @@ export class WifiDevice {
     private _wifiDeviceInterface: DBus.DBusInterface;
 
     private _propertiesInterface: DBus.DBusInterface;
-    private _properties: any;
-    private _propertiesSubject: BehaviorSubject<any>;
-    public properties$: Observable<any>;
+    private _properties: WifiDeviceProperties;
+    private _propertiesSubject: BehaviorSubject<WifiDeviceProperties>;
+    public properties$: Observable<WifiDeviceProperties>;
     public get properties(): any {
         return this._properties;
     }
@@ -49,7 +49,7 @@ export class WifiDevice {
 
             this._propertiesInterface = propertiesInterface;
             this._properties = initialProperties;
-            this._propertiesSubject = new BehaviorSubject<any>(this._properties);
+            this._propertiesSubject = new BehaviorSubject<WifiDeviceProperties>(this._properties);
             this.properties$ = this._propertiesSubject.asObservable();
 
             this._accessPoints = initialAccessPoints;
@@ -68,6 +68,7 @@ export class WifiDevice {
                 let propertiesInterface = await objectInterface(bus, devicePath, 'org.freedesktop.DBus.Properties');
                 
                 let deviceProperties = await getAllProperties(deviceInterface);
+
                 let wifiDeviceProperties = await getAllProperties(wifiDeviceInterface);
 
                 let initialProperties = {...deviceProperties, ...wifiDeviceProperties};

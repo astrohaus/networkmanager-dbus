@@ -1,6 +1,6 @@
 import DBus = require("dbus");
 import { BehaviorSubject, Observable } from "rxjs";
-import { DeviceType } from "./dbus-types";
+import { DeviceType, NetworkManagerProperties, NetworkManagerState } from "./dbus-types";
 import { EthernetDevice } from "./ethernet-device";
 import { call, getAllProperties, objectInterface, signal } from "./util";
 import { WifiDevice } from "./wifi-device";
@@ -13,10 +13,10 @@ export class NetworkManager {
     private _networkManagerInterface: DBus.DBusInterface;
 
     private _propertiesInterface: DBus.DBusInterface;
-    private _properties: any;
-    private _propertiesSubject: BehaviorSubject<any>;
-    public properties$: Observable<any>;
-    public get properties(): any {
+    private _properties: NetworkManagerProperties;
+    private _propertiesSubject: BehaviorSubject<NetworkManagerProperties>;
+    public properties$: Observable<NetworkManagerProperties>;
+    public get properties(): NetworkManagerProperties {
         return this._properties;
     }
 

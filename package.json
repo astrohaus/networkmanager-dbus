@@ -1,6 +1,6 @@
 {
   "name": "networkmanager-dbus",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A network manager for dbus",
   "author": "Bailey Blankenship <bailey.blankenship@dropworks.com>",
   "main": "lib/index.js",
@@ -8,7 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run build && node lib/test.js",
     "prepublish": "npm run build"
   },
   "files": [
