@@ -106,11 +106,10 @@ export enum DeviceType {
 }
 
 /**
- * Indicates WPA Flags for an Access Point – like whether WPS is supported
- * @readonly
+ * 802.11 access point flags
  * @enum {number}
  */
-export enum WpaFlags {
+export enum AccessPointFlags {
     /** @member {number} */
     /** access point has no special capabilities */
     NONE = 0x00000000,
@@ -129,11 +128,11 @@ export enum WpaFlags {
 }
 
 /**
- * Security flags for an Access Point – indicates which security methods are supported
- * @readonly
+ * 802.11 access point security and authentication flags. 
+ * These flags describe the current security requirements of an access point as determined from the access point's beacon.
  * @enum {number}
  */
-export enum SecurityFlags {
+export enum AccessPointSecurityFlags {
     /** @member {number} */
     /** the access point has no special security requirements */
     NONE = 0x00000000,
@@ -603,18 +602,72 @@ export enum DeviceStateReason {
     REASON_PEER_NOT_FOUND = 67,
 }
 
+/**
+ * Wi-Fi Access Point
+ *
+ * @link https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.AccessPoint.html
+ */
 export interface AccessPoint {
-    Flags: number,
-    WpaFlags: number,
-    RsnFlags: number,
-    Ssid: string,
-    Frequency: number,
-    HwAddress: string,
-    Mode: number,
-    MaxBitrate: number,
-    Strength: number,
-    LastSeen: number,
+    /** @member {number} */
+    /** 
+     * Flags describing the capabilities of the access point. 
+     * 
+     * @see AccessPointFlags
+     * */
+    Flags: number;
+
+    /** @member {number} */
+    /** 
+     * Flags describing the access point's capabilities according to WPA (Wifi Protected Access).
+     *  
+     * @see AccessPointSecurityFlags
+     * */
+    WpaFlags: number;
+
+    /** @member {number} */
+    /** 
+     * Flags describing the access point's capabilities according to the RSN (Robust Secure Network) protocol.
+     * 
+     * @see AccessPointSecurityFlags
+     *  */
+    RsnFlags: number;
+
+    //Returns: NM80211ApSecurityFlags
+    /** @member {string} */
+    /** The Service Set Identifier identifying the access point. */
+    Ssid: string;
+
+    /** @member {number} */
+    /** The radio channel frequency in use by the access point, in MHz. */
+    Frequency: number;
+
+    /** @member {string} */
+    /** The hardware address (BSSID) of the access point. */
+    HwAddress: string;
+
+    /** @member {number} */
+    /** Describes the operating mode of the access point. */
+    Mode: number;
+
+    //Returns: NM80211Mode
+    /** @member {number} */
+    /** The maximum bitrate this access point is capable of, in kilobits/second (Kb/s). */
+    MaxBitrate: number;
+
+    /** @member {number} */
+    /** The current signal quality of the access point, in percent. */
+    Strength: number;
+
+    /** @member {number} */
+    /** The timestamp (in CLOCK_BOOTTIME seconds) for the last time the access point was found in scan results. A value of -1 means the access point has never been found in scan results. */
+    LastSeen: number;
+
+    /** @member {AccessPointPath} */
+    /** The object path of the access point. Used when connecting to a specific access point */
     AccessPointPath: AccessPointPath,
+
+    /** @member {ConnectionSettingsPath[]} */
+    /** The paths of candidate connection settings for the AP. Useful handling "known" networks */
     ConnectionSettingsCandidates: ConnectionSettingsPath[]
 }
 

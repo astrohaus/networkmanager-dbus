@@ -130,12 +130,10 @@ export class WifiDevice {
                 let accessPointProperties = await getAllProperties(accessPointInterface);
                 accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
                 accessPointProperties.AccessPointPath = apPath;
-                this._accessPoints[apPath] = accessPointProperties;
+                this._accessPoints[apPath] = accessPointProperties as AccessPoint;
                 this._accessPointsSubject.next(Object.values(this._accessPoints));
             } catch(err) {
-                console.log(`No properties for ${params[0]}: ${err}`);
-                // sometimes the access points get added/removed too quickly to get data
-                // if we can't get data for a particular access point, just ignore it
+                console.error(`No properties for ${params[0]}: ${err}`);
             }
             
         });
