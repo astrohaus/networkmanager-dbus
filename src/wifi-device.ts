@@ -132,15 +132,14 @@ export class WifiDevice {
                 accessPointProperties.AccessPointPath = apPath;
                 this._accessPoints[apPath] = accessPointProperties as AccessPoint;
                 this._accessPointsSubject.next(Object.values(this._accessPoints));
-            } catch(err) {
-                console.error(`No properties for ${params[0]}: ${err}`);
+            } catch(_) {
+                // If we can't find an access point's data, skip over it
             }
             
         });
 
         signal(this._wifiDeviceInterface, "AccessPointRemoved").subscribe(async (params: any[]) => {
             let apPath = params[0];
-            console.log(`AP removed: ${apPath}`);
             delete this._accessPoints[apPath];
             this._accessPointsSubject.next(Object.values(this._accessPoints));
         });
