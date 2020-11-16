@@ -17,7 +17,7 @@ export async function objectInterface(bus: DBus.DBusConnection, objectPath: stri
     )});
 }
 
-export function signal(objectInterface: DBus.DBusInterface, signalName: string): Observable<any> {
+export function signal(objectInterface: DBus.DBusInterface, signalName: string): Observable<any[]> {
     return new Observable<any>(observer => {
         const listener = (...args: any[]) => {
             observer.next(args);

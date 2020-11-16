@@ -16,12 +16,12 @@ async function start() {
     });
 
     wifiDevice.properties$.subscribe(properties => {
-        console.log("wifi properties:");
+        console.log(`wifi properties:`);
         console.log(properties);
     });
 
     wifiDevice.accessPoints$.subscribe(accessPoints => {
-        console.log("access points:");
+        console.log(`access points:`);
         console.log(accessPoints);
     });
 

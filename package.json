@@ -1,6 +1,6 @@
 {
   "name": "networkmanager-dbus",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "A network manager for dbus",
   "author": "Bailey Blankenship <bailey.blankenship@dropworks.com>",
   "main": "lib/index.js",

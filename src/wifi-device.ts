@@ -40,7 +40,6 @@ export class WifiDevice {
         initialProperties: any,
         initialAccessPoints: AccessPointMap
         ) {
-
             this._bus = bus;
             this._devicePath = devicePath;
 
@@ -80,6 +79,7 @@ export class WifiDevice {
                         let accessPointInterface = await objectInterface(bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
                         let accessPointProperties = await getAllProperties(accessPointInterface);
                         accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
+                        accessPointProperties.AccessPointPath = accessPointPath;
                         initialAccessPoints[accessPointPath] = accessPointProperties as unknown as AccessPoint;
                     }
                 }
@@ -115,7 +115,7 @@ export class WifiDevice {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, "PropertiesChanged").subscribe(propertyChangeInfo => {
+        signal(this._propertiesInterface, "PropertiesChanged").subscribe((propertyChangeInfo: any[]) => {
             let propertyChanges = propertyChangeInfo[1];
             Object.assign(this._properties, propertyChanges);
             this._propertiesSubject.next(this._properties);
@@ -123,22 +123,27 @@ export class WifiDevice {
     }
 
     private _listenForAccessPoints() {
-        signal(this._wifiDeviceInterface, "AccessPointAdded").subscribe(async accessPointPath => {
+        signal(this._wifiDeviceInterface, "AccessPointAdded").subscribe(async (params: any[]) => {
             try {
-                let accessPointInterface = await objectInterface(this._bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
+                let apPath: string = params[0];
+                let accessPointInterface = await objectInterface(this._bus, apPath, "org.freedesktop.NetworkManager.AccessPoint");
                 let accessPointProperties = await getAllProperties(accessPointInterface);
                 accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                this._accessPoints[accessPointPath] = accessPointProperties;
+                accessPointProperties.AccessPointPath = apPath;
+                this._accessPoints[apPath] = accessPointProperties;
                 this._accessPointsSubject.next(Object.values(this._accessPoints));
-            } catch(_) {
+            } catch(err) {
+                console.log(`No properties for ${params[0]}: ${err}`);
                 // sometimes the access points get added/removed too quickly to get data
                 // if we can't get data for a particular access point, just ignore it
             }
             
         });
 
-        signal(this._wifiDeviceInterface, "AccessPointRemoved").subscribe(async accessPointPath => {
-            delete this._accessPoints[accessPointPath];
+        signal(this._wifiDeviceInterface, "AccessPointRemoved").subscribe(async (params: any[]) => {
+            let apPath = params[0];
+            console.log(`AP removed: ${apPath}`);
+            delete this._accessPoints[apPath];
             this._accessPointsSubject.next(Object.values(this._accessPoints));
         });
     }

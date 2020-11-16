@@ -604,18 +604,18 @@ export enum DeviceStateReason {
 }
 
 export interface AccessPoint {
-    flags: number,
-    wpaFlags: number,
-    rsnFlags: number,
-    ssid: string,
-    frequency: number,
-    hwAddress: string,
-    mode: number,
-    maxBitrate: number,
-    strength: number,
-    lastSeen: number,
-    accessPointPath: AccessPointPath,
-    connectionSettingsCandidates: ConnectionSettingsPath[]
+    Flags: number,
+    WpaFlags: number,
+    RsnFlags: number,
+    Ssid: string,
+    Frequency: number,
+    HwAddress: string,
+    Mode: number,
+    MaxBitrate: number,
+    Strength: number,
+    LastSeen: number,
+    AccessPointPath: AccessPointPath,
+    ConnectionSettingsCandidates: ConnectionSettingsPath[]
 }
 
 export interface NetworkManagerProperties {
