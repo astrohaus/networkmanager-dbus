@@ -1,12 +1,8 @@
 import DBus = require("dbus");
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
-import { AccessPoint, EthernetDeviceProperties } from "./dbus-types";
+import { EthernetDeviceProperties } from "./dbus-types";
 import { call, getAllProperties, getProperty, objectInterface, signal } from "./util";
-
-type AccessPointMap = {
-    [key: string]: AccessPoint
-};
 
 export class EthernetDevice {
 

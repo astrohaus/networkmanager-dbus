@@ -2,7 +2,7 @@ import { NetworkManager } from './network-manager';
 import { WifiDevice } from './wifi-device';
 import { EthernetDevice } from './ethernet-device';
 import { 
-    AccessPoint,
+    AccessPointProperties,
     NetworkManagerProperties,
     EthernetDeviceProperties,
     WifiDeviceProperties,
@@ -20,7 +20,7 @@ export {
     NetworkManager,
     WifiDevice,
     EthernetDevice,
-    AccessPoint,
+    AccessPointProperties,
     NetworkManagerProperties,
     EthernetDeviceProperties,
     WifiDeviceProperties,

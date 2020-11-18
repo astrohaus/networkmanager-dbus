@@ -1,11 +1,11 @@
 import DBus = require("dbus");
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
-import { AccessPoint, WifiDeviceProperties } from "./dbus-types";
+import { AccessPointProperties, WifiDeviceProperties } from "./dbus-types";
 import { byteArrayToString, call, getAllProperties, getProperty, objectInterface, signal } from "./util";
 
 type AccessPointMap = {
-    [key: string]: AccessPoint
+    [key: string]: AccessPointProperties
 };
 
 export class WifiDevice {
@@ -27,7 +27,7 @@ export class WifiDevice {
     private _accessPoints: AccessPointMap;
     private _accessPointsSubject: BehaviorSubject<AccessPointMap>;
     public accessPoints$: Observable<AccessPointMap>;
-    public get accessPoints(): AccessPoint[] {
+    public get accessPoints(): AccessPointProperties[] {
         return Object.values(this._accessPoints);
     }
     
@@ -79,7 +79,7 @@ export class WifiDevice {
                         let accessPointInterface = await objectInterface(bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
                         let accessPointProperties = await getAllProperties(accessPointInterface);
                         accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                        initialAccessPoints[accessPointPath] = accessPointProperties as unknown as AccessPoint;
+                        initialAccessPoints[accessPointPath] = accessPointProperties as unknown as AccessPointProperties;
                     }
                 }
 
@@ -128,7 +128,7 @@ export class WifiDevice {
                 let accessPointInterface = await objectInterface(this._bus, apPath, "org.freedesktop.NetworkManager.AccessPoint");
                 let accessPointProperties = await getAllProperties(accessPointInterface);
                 accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                this._accessPoints[apPath] = accessPointProperties as AccessPoint;
+                this._accessPoints[apPath] = accessPointProperties as AccessPointProperties;
                 this._accessPointsSubject.next(this._accessPoints);
             } catch(_) {
                 // If we can't find an access point's data, skip over it

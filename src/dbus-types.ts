@@ -604,7 +604,7 @@ export enum DeviceStateReason {
  *
  * @link https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.AccessPoint.html
  */
-export interface AccessPoint {
+export interface AccessPointProperties {
     /** @member {number} */
     /** 
      * Flags describing the capabilities of the access point. 
