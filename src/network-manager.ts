@@ -1,5 +1,6 @@
 import DBus = require("dbus");
 import { BehaviorSubject, Observable } from "rxjs";
+import { ConnectionSettingsManager } from "./connection-settings-manager";
 import { DeviceType, NetworkManagerProperties, NetworkManagerState } from "./dbus-types";
 import { EthernetDevice } from "./ethernet-device";
 import { call, getAllProperties, objectInterface, signal } from "./util";
@@ -43,9 +44,22 @@ export class NetworkManager {
             } else {
                 try {
                     let networkManagerInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
+
                     let propertiesInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.DBus.Properties');
-    
                     let initialProperties = await getAllProperties(networkManagerInterface);
+
+                    let connectionSettingsInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager/Settings', 'org.freedesktop.NetworkManager.Settings');
+                    let initialConnectionSettings: any = {};
+                    let connectionPaths: string[] = await call(connectionSettingsInterface, 'ListConnections', {});
+
+                    const getConnectionSettingsForConnectionPaths = async () => {
+                        for(let i = 0; i < connectionPaths.length; i++) {
+                            let connectionInterface = await objectInterface(this._bus, connectionPaths[i], 'org.freedesktop.NetworkManager.Settings.Connection');
+                            initialConnectionSettings[connectionPaths[i]] = await call(connectionInterface, 'GetSettings', {});
+                        }
+                    }
+
+                    await getConnectionSettingsForConnectionPaths();
 
                     let networkManager = new NetworkManager(
                         networkManagerInterface, 
@@ -113,6 +127,17 @@ export class NetworkManager {
             }
             
         })
+    }
+
+    public connectionSettingsManager(): Promise<ConnectionSettingsManager> {
+        return new Promise<ConnectionSettingsManager>(async (resolve, reject) => {
+            try {
+                let connectionSettingsManager = await ConnectionSettingsManager.init(NetworkManager._bus);
+                resolve(connectionSettingsManager);
+            } catch(err) {
+                reject(err);
+            }
+        });
     }
 
     private _listenForPropertyChanges() {

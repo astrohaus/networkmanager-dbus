@@ -1,6 +1,3 @@
-// (\s+)(\S+)\s+= (0x\d+),.*// (.*)
-// $1/** @member {number} */\n$1/** $4 */\n$1$2 = $3,
-
 /**
  * The type of a device enumerated by Network Manager
  * @readonly
@@ -661,14 +658,6 @@ export interface AccessPoint {
     /** @member {number} */
     /** The timestamp (in CLOCK_BOOTTIME seconds) for the last time the access point was found in scan results. A value of -1 means the access point has never been found in scan results. */
     LastSeen: number;
-
-    /** @member {AccessPointPath} */
-    /** The object path of the access point. Used when connecting to a specific access point */
-    AccessPointPath: AccessPointPath,
-
-    /** @member {ConnectionSettingsPath[]} */
-    /** The paths of candidate connection settings for the AP. Useful handling "known" networks */
-    ConnectionSettingsCandidates: ConnectionSettingsPath[]
 }
 
 export interface NetworkManagerProperties {

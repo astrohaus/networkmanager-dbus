@@ -25,8 +25,8 @@ export class WifiDevice {
     }
 
     private _accessPoints: AccessPointMap;
-    private _accessPointsSubject: BehaviorSubject<AccessPoint[]>;
-    public accessPoints$: Observable<AccessPoint[]>;
+    private _accessPointsSubject: BehaviorSubject<AccessPointMap>;
+    public accessPoints$: Observable<AccessPointMap>;
     public get accessPoints(): AccessPoint[] {
         return Object.values(this._accessPoints);
     }
@@ -52,7 +52,7 @@ export class WifiDevice {
             this.properties$ = this._propertiesSubject.asObservable();
 
             this._accessPoints = initialAccessPoints;
-            this._accessPointsSubject = new BehaviorSubject<AccessPoint[]>(Object.values(this._accessPoints));
+            this._accessPointsSubject = new BehaviorSubject<AccessPointMap>(this._accessPoints);
             this.accessPoints$ = this._accessPointsSubject.asObservable();
 
             this._listenForPropertyChanges();
@@ -79,7 +79,6 @@ export class WifiDevice {
                         let accessPointInterface = await objectInterface(bus, accessPointPath, "org.freedesktop.NetworkManager.AccessPoint");
                         let accessPointProperties = await getAllProperties(accessPointInterface);
                         accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                        accessPointProperties.AccessPointPath = accessPointPath;
                         initialAccessPoints[accessPointPath] = accessPointProperties as unknown as AccessPoint;
                     }
                 }
@@ -129,9 +128,8 @@ export class WifiDevice {
                 let accessPointInterface = await objectInterface(this._bus, apPath, "org.freedesktop.NetworkManager.AccessPoint");
                 let accessPointProperties = await getAllProperties(accessPointInterface);
                 accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                accessPointProperties.AccessPointPath = apPath;
                 this._accessPoints[apPath] = accessPointProperties as AccessPoint;
-                this._accessPointsSubject.next(Object.values(this._accessPoints));
+                this._accessPointsSubject.next(this._accessPoints);
             } catch(_) {
                 // If we can't find an access point's data, skip over it
             }
@@ -141,7 +139,7 @@ export class WifiDevice {
         signal(this._wifiDeviceInterface, "AccessPointRemoved").subscribe(async (params: any[]) => {
             let apPath = params[0];
             delete this._accessPoints[apPath];
-            this._accessPointsSubject.next(Object.values(this._accessPoints));
+            this._accessPointsSubject.next(this._accessPoints);
         });
     }
 

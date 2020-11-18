@@ -1,14 +1,17 @@
 import { EthernetDevice, NetworkManager, WifiDevice } from ".";
+import { ConnectionSettingsManager } from "./connection-settings-manager";
 import { Metered } from "./dbus-types";
 
 let networkManager: NetworkManager;
 let wifiDevice: WifiDevice;
 let ethernetDevice: EthernetDevice;
+let connectionSettingsManager: ConnectionSettingsManager;
 
 async function start() {
     networkManager = await NetworkManager.init();
     wifiDevice = await networkManager.wifiDevice();
     ethernetDevice = await networkManager.ethernetDevice();
+    connectionSettingsManager = await networkManager.connectionSettingsManager();
 
     networkManager.properties$.subscribe(properties => {
         console.log("nm props:");
@@ -28,6 +31,11 @@ async function start() {
     ethernetDevice.properties$.subscribe(properties => {
         console.log("ethernet device props:");
         console.log(properties);
+    });
+
+    connectionSettingsManager.connectionProfiles$.subscribe(profiles => {
+        console.log("Connection profiles:");
+        console.log(profiles);
     })
 }
 
