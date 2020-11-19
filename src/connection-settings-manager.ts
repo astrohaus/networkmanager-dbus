@@ -1,6 +1,7 @@
 import DBus from "dbus";
 import { BehaviorSubject, Observable } from "rxjs";
-import { call, getAllProperties, objectInterface, signal } from "./util";
+import { call, getAllProperties, objectInterface, signal, stringToByteArray } from "./util";
+import { v4 as uuidv4 } from 'uuid';
 
 export class ConnectionSettingsManager {
 
@@ -89,6 +90,33 @@ export class ConnectionSettingsManager {
                 reject(err);
             }
         });
+    }
+
+    public addWifiConnection(ssid: string, password: string): Promise<string> {
+        let connectionProfile = {
+            connection: {
+              type: "802-11-wireless",
+              uuid: uuidv4(),
+              id: ssid
+            },
+            "802-11-wireless": {
+                ssid: stringToByteArray(ssid),
+                mode: "infrastructure"
+            },
+            "802-11-wireless-security": {
+                "key-mgmt": "wpa-psk",
+                "auth-alg": "open",
+                "psk": password
+            },
+            "ipv4": {
+                method: "auto"
+            },
+            "ipv6": {
+                method: "ignore"
+            }
+        };
+
+        return this.addConnectionProfile(connectionProfile);
     }
 
     public removeConnectionProfile(profilePath: string): Promise<void> {

@@ -113,7 +113,7 @@ export class WifiDevice {
         });
     }
     
-    public activateConnection(connectionProfilePath: string): Promise<string> {
+    public async activateConnection(connectionProfilePath: string): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
             try {
                 let networkManagerInterface = await objectInterface(this._bus, "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager");
