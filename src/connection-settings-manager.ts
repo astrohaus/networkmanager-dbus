@@ -92,21 +92,17 @@ export class ConnectionSettingsManager {
         });
     }
 
-    public addWifiConnection(ssid: string, password: string): Promise<string> {
-        let connectionProfile = {
+    public addWifiConnection(ssid: string, hidden: boolean, password?: string): Promise<string> {
+        let connectionProfile: any = {
             connection: {
               type: "802-11-wireless",
+              "interface-name": "wlan0",
               uuid: uuidv4(),
               id: ssid
             },
             "802-11-wireless": {
                 ssid: stringToByteArray(ssid),
                 mode: "infrastructure"
-            },
-            "802-11-wireless-security": {
-                "key-mgmt": "wpa-psk",
-                "auth-alg": "open",
-                "psk": password
             },
             "ipv4": {
                 method: "auto"
@@ -115,6 +111,19 @@ export class ConnectionSettingsManager {
                 method: "ignore"
             }
         };
+
+        if(password) {
+            connectionProfile["802-11-wireless-security"] = {
+                "key-mgmt": "wpa-psk",
+                "auth-alg": "open",
+                "psk": password
+            };
+            connectionProfile["802-11-wireless"].security = "802-11-wireless-security";
+        }
+
+        if(hidden) {
+            connectionProfile["802-11-wireless"].hidden = true;
+        }
 
         return this.addConnectionProfile(connectionProfile);
     }
