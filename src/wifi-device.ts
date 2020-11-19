@@ -112,6 +112,18 @@ export class WifiDevice {
             }
         });
     }
+    
+    public activateConnection(connectionProfilePath: string): Promise<string> {
+        return new Promise<string>(async (resolve, reject) => {
+            try {
+                let networkManagerInterface = await objectInterface(this._bus, "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager");
+                let activeConnectionPath = await call(networkManagerInterface, "ActivateConnection", {}, connectionProfilePath, this._devicePath, "/");
+                resolve(activeConnectionPath);
+            } catch(err) {
+                reject(err);
+            }   
+        });
+    }
 
     private _listenForPropertyChanges() {
         signal(this._propertiesInterface, "PropertiesChanged").subscribe((propertyChangeInfo: any[]) => {
