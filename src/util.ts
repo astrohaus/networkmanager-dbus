@@ -35,13 +35,17 @@ export function signal(objectInterface: DBus.DBusInterface, signalName: string):
 export async function call(objectInterface: DBus.DBusInterface, methodName: string, options: any, ...args: any[]): Promise<any> {
     return new Promise<any>(((resolve, reject) => {
         if(args.length) {
-            objectInterface[methodName](args, options, (err: string, result: any) => {
-                if(err) {
-                    reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
-                } else {
-                    resolve(result);
+            args.push(options);
+            args.push(
+                (err: string, result: any) => {
+                    if(err) {
+                        reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
+                    } else {
+                        resolve(result);
+                    }
                 }
-            });
+            );
+            objectInterface[methodName](...args); 
         } else {
             objectInterface[methodName](options, (err: string, result: any) => {
                 if(err) {

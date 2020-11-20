@@ -102,7 +102,7 @@ export class ConnectionSettingsManager {
             },
             "802-11-wireless": {
                 ssid: stringToByteArray(ssid),
-                mode: "infrastructure"
+                mode: 'infrastructure'
             },
             "ipv4": {
                 method: "auto"
@@ -124,6 +124,9 @@ export class ConnectionSettingsManager {
         if(hidden) {
             connectionProfile["802-11-wireless"].hidden = true;
         }
+
+        console.log("WIFI CONNECTION PROPS");
+        console.log(connectionProfile);
 
         return this.addConnectionProfile(connectionProfile);
     }
