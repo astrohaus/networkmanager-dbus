@@ -1,5 +1,5 @@
 import DBus = require("dbus");
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, Observable, Subscribable, Subscription } from "rxjs";
 import { ConnectionSettingsManager } from "./connection-settings-manager";
 import { DeviceType, NetworkManagerProperties, NetworkManagerState } from "./dbus-types";
 import { EthernetDevice } from "./ethernet-device";
@@ -21,12 +21,13 @@ export class NetworkManager {
         return this._properties;
     }
 
+    private _activatingConnectionSubscription: Subscription | null = null;
+
     private constructor(
         networkManagerInterface: DBus.DBusInterface,
         propertiesInterface: DBus.DBusInterface,
         initialProperties: any
         ) {
-        
             this._networkManagerInterface = networkManagerInterface;
 
             this._propertiesInterface = propertiesInterface;
@@ -35,6 +36,10 @@ export class NetworkManager {
             this.properties$ = this._propertiesSubject.asObservable();
 
             this._listenForPropertyChanges();
+
+            if(initialProperties.ActivatingConnection) {
+                this._listenToActivatingConnection(initialProperties.ActivatingConnection);
+            }
     }
 
     public static async init(): Promise<NetworkManager> {
@@ -48,18 +53,12 @@ export class NetworkManager {
                     let propertiesInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.DBus.Properties');
                     let initialProperties = await getAllProperties(networkManagerInterface);
 
-                    let connectionSettingsInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager/Settings', 'org.freedesktop.NetworkManager.Settings');
-                    let initialConnectionSettings: any = {};
-                    let connectionPaths: string[] = await call(connectionSettingsInterface, 'ListConnections', {});
-
-                    const getConnectionSettingsForConnectionPaths = async () => {
-                        for(let i = 0; i < connectionPaths.length; i++) {
-                            let connectionInterface = await objectInterface(this._bus, connectionPaths[i], 'org.freedesktop.NetworkManager.Settings.Connection');
-                            initialConnectionSettings[connectionPaths[i]] = await call(connectionInterface, 'GetSettings', {});
-                        }
+                    if(initialProperties.ActivatingConnection === "/") {
+                        initialProperties.ActivatingConnection = null;
+                    } else {
+                        let activeConnectionInterface = await objectInterface(NetworkManager._bus, initialProperties.ActivatingConnection, "org.freedesktop.NetworkManager.Connection.Active");
+                        initialProperties.ActivatingConnection = await getAllProperties(activeConnectionInterface);
                     }
-
-                    await getConnectionSettingsForConnectionPaths();
 
                     let networkManager = new NetworkManager(
                         networkManagerInterface, 
@@ -141,11 +140,44 @@ export class NetworkManager {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, "PropertiesChanged").subscribe((propertyChangeInfo: any[]) => {
-            let changedProperties = propertyChangeInfo[1];
+        signal(this._propertiesInterface, "PropertiesChanged").subscribe(async (propertyChangeInfo: any[]) => {
+            let changedProperties: Partial<NetworkManagerProperties> = propertyChangeInfo[1];
+            if(changedProperties.ActivatingConnection && changedProperties.ActivatingConnection !== this._properties.ActivatingConnection) {
+                if(changedProperties.ActivatingConnection === "/") {
+                    this._stopListeningToActivatingConnection();
+                    changedProperties.ActivatingConnection = null;
+                } else {
+                    try {
+                        this._listenToActivatingConnection(changedProperties.ActivatingConnection as string);
+                        let activatingConnectionInterface = await objectInterface(NetworkManager._bus, changedProperties.ActivatingConnection, 'org.freedesktop.NetworkManager.Connection.Active');
+                        changedProperties.ActivatingConnection = await getAllProperties(activatingConnectionInterface);
+                    } catch(err) {
+                        console.error("Error listening to active connection:");
+                        console.error(err);
+                    }
+                }
+            }
+
             Object.assign(this._properties, changedProperties);
             this._propertiesSubject.next(this._properties);
         })
+    }
+
+    private async _listenToActivatingConnection(activatingConnectionPath: string) {
+        this._stopListeningToActivatingConnection();
+
+        let activatingConnectionInterface = await objectInterface(NetworkManager._bus, activatingConnectionPath, "org.freedesktop.DBus.Properties");
+        this._activatingConnectionSubscription = signal(activatingConnectionInterface, "PropertiesChanged").subscribe((propertyChangeInfo: any[]) => {
+            let changedProperties = propertyChangeInfo[1];
+            Object.assign(this._properties.ActivatingConnection, changedProperties);
+            this._propertiesSubject.next(this._properties);
+        });
+    }
+
+    private _stopListeningToActivatingConnection() {
+        if(this._activatingConnectionSubscription) {
+            this._activatingConnectionSubscription.unsubscribe();
+        }
     }
 
 }

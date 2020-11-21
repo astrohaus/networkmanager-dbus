@@ -675,7 +675,7 @@ export interface NetworkManagerProperties {
     PrimaryConnection: ActiveConnectionPath;
     PrimaryConnectionType: string;
     Metered: Metered;
-    ActivatingConnection: ActiveConnectionPath;
+    ActivatingConnection: any | null;
     Startup: boolean;
     Version: string;
     Capabilities: any[];

@@ -13,10 +13,10 @@ async function start() {
     ethernetDevice = await networkManager.ethernetDevice();
     connectionSettingsManager = await networkManager.connectionSettingsManager();
 
-    // networkManager.properties$.subscribe(properties => {
-    //     console.log("nm props:");
-    //     console.log(properties);
-    // });
+    networkManager.properties$.subscribe(properties => {
+        console.log("nm props:");
+        console.log(properties);
+    });
 
     // wifiDevice.properties$.subscribe(properties => {
     //     console.log(`wifi properties:`);
@@ -33,18 +33,18 @@ async function start() {
     //     console.log(properties);
     // });
 
-    connectionSettingsManager.connectionProfiles$.subscribe(profiles => {
-        console.log("Connection profiles:");
-        console.log(profiles);
-    });
+    // connectionSettingsManager.connectionProfiles$.subscribe(profiles => {
+    //     console.log("Connection profiles:");
+    //     console.log(profiles);
+    // });
 
     //connectionSettingsManager.addWifiConnection("OKBIoT", true);
 
     //let settingsPath = await connectionSettingsManager.addWifiConnection("OKBIoT", true);
-    let settingsPath = "/org/freedesktop/NetworkManager/Settings/13";
-    console.log(`CONNECTION ADDED: ${settingsPath}`);
-    let activeConnectionPath = await wifiDevice.activateConnection(settingsPath);
-    console.log(`ACTIVE CONNECTION: ${activeConnectionPath}`);
+    // let settingsPath = "/org/freedesktop/NetworkManager/Settings/13";
+    // console.log(`CONNECTION ADDED: ${settingsPath}`);
+    // let activeConnectionPath = await wifiDevice.activateConnection(settingsPath);
+    // console.log(`ACTIVE CONNECTION: ${activeConnectionPath}`);
 }
 
 start();
