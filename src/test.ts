@@ -18,6 +18,16 @@ async function start() {
         console.log(properties);
     });
 
+    setTimeout(() => {
+        console.log("DISABLING WIRELESS");
+        networkManager.enableWireless(false);
+    }, 5000);
+
+    setTimeout(() => {
+        console.log("ENABLING WIRELESS");
+        networkManager.enableWireless(true);
+    }, 10000);
+
     // wifiDevice.properties$.subscribe(properties => {
     //     console.log(`wifi properties:`);
     //     console.log(properties);

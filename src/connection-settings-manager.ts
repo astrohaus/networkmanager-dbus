@@ -125,9 +125,6 @@ export class ConnectionSettingsManager {
             connectionProfile["802-11-wireless"].hidden = true;
         }
 
-        console.log("WIFI CONNECTION PROPS");
-        console.log(connectionProfile);
-
         return this.addConnectionProfile(connectionProfile);
     }
 

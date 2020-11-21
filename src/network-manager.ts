@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, Subscribable, Subscription } from "rxjs";
 import { ConnectionSettingsManager } from "./connection-settings-manager";
 import { DeviceType, NetworkManagerProperties, NetworkManagerState } from "./dbus-types";
 import { EthernetDevice } from "./ethernet-device";
-import { call, getAllProperties, objectInterface, signal } from "./util";
+import { call, getAllProperties, objectInterface, setProperty, signal } from "./util";
 import { WifiDevice } from "./wifi-device";
 
 export class NetworkManager {
@@ -137,6 +137,10 @@ export class NetworkManager {
                 reject(err);
             }
         });
+    }
+
+    public enableWireless(enable: boolean) {
+        setProperty(this._networkManagerInterface, "WirelessEnabled", enable);
     }
 
     private _listenForPropertyChanges() {

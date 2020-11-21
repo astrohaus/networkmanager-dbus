@@ -70,6 +70,18 @@ export async function getProperty(objectInterface: DBus.DBusInterface, propertyN
     });
 }
 
+export async function setProperty(objectInterface: DBus.DBusInterface, propertyName: string, value: any): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        objectInterface.setProperty(propertyName, value, (err) => {
+            if(err) {
+                reject(`Error setting property ${propertyName} on ${objectInterface.interfaceName} interface for object ${objectInterface.objectPath}: ${err}`);
+            } else {
+                resolve();
+            }
+        })
+    });
+}
+
 export async function getAllProperties(objectInterface: DBus.DBusInterface): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         objectInterface.getProperties((err, result) => {
