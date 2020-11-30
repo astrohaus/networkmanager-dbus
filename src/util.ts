@@ -106,3 +106,10 @@ export function stringToByteArray(input: string): number[] {
 
     return byteArray;
 }
+
+export function int32ToByteArray(int: number): Uint8Array {
+    let byteArray = new ArrayBuffer(4); // an Int32 takes 4 bytes
+    new DataView(byteArray).setUint32(0, int, false); // byteOffset = 0; litteEndian = false
+    
+    return new Uint8Array(byteArray);
+}

@@ -1,35 +1,51 @@
 import { NetworkManager } from './network-manager';
 import { WifiDevice } from './wifi-device';
 import { EthernetDevice } from './ethernet-device';
+import { ConnectionSettingsManager } from './connection-settings-manager';
 import { 
-    AccessPointProperties,
-    NetworkManagerProperties,
-    EthernetDeviceProperties,
-    WifiDeviceProperties,
+    DeviceType,
     AccessPointFlags,
     AccessPointSecurityFlags,
+    WirelessMode,
+    Metered,
+    NetworkManagerState,
+    ConnectivityState,
     DeviceState,
     DeviceStateReason,
-    NetworkManagerState,
-    Metered,
-    AccessPointPath,
-    ConnectionSettingsPath
+    AccessPointProperties,
+    NetworkManagerProperties,
+    ConnectionProfile,
+    ConnectionSettingsManagerProperties,
+    WifiDeviceProperties,
+    EthernetDeviceProperties,
+    ConnectionProfilePath,
+    ActiveConnectionPath,
+    DevicePath,
+    AccessPointPath
 } from './dbus-types';
 
 export {
     NetworkManager,
     WifiDevice,
     EthernetDevice,
-    AccessPointProperties,
-    NetworkManagerProperties,
-    EthernetDeviceProperties,
-    WifiDeviceProperties,
+    ConnectionSettingsManager,
+    DeviceType,
     AccessPointFlags,
     AccessPointSecurityFlags,
+    WirelessMode,
+    Metered,
+    NetworkManagerState,
+    ConnectivityState,
     DeviceState,
     DeviceStateReason,
-    NetworkManagerState,
-    Metered,
-    AccessPointPath,
-    ConnectionSettingsPath
+    AccessPointProperties,
+    NetworkManagerProperties,
+    ConnectionProfile,
+    ConnectionSettingsManagerProperties,
+    WifiDeviceProperties,
+    EthernetDeviceProperties,
+    ConnectionProfilePath,
+    ActiveConnectionPath,
+    DevicePath,
+    AccessPointPath
 }

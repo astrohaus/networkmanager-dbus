@@ -1,8 +1,8 @@
 import DBus = require("dbus");
 import { BehaviorSubject } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
-import { AccessPointProperties, WifiDeviceProperties } from "./dbus-types";
-import { byteArrayToString, call, getAllProperties, getProperty, objectInterface, signal } from "./util";
+import { AccessPointProperties, ConnectionProfilePath, WifiDeviceProperties } from "./dbus-types";
+import { byteArrayToString, call, getAllProperties, int32ToByteArray, objectInterface, signal } from "./util";
 
 type AccessPointMap = {
     [key: string]: AccessPointProperties
@@ -13,28 +13,38 @@ export class WifiDevice {
     private _bus: DBus.DBusConnection;
     private _devicePath: string;
 
-    private _deviceInterface: DBus.DBusInterface;
     private _wifiDeviceInterface: DBus.DBusInterface;
 
     private _propertiesInterface: DBus.DBusInterface;
     private _properties: WifiDeviceProperties;
     private _propertiesSubject: BehaviorSubject<WifiDeviceProperties>;
+
+    /** Continuously updated wifi device properties */
     public properties$: Observable<WifiDeviceProperties>;
+    /** Latest wifi device properties as a one-time value */
     public get properties(): any {
         return this._properties;
     }
 
     private _accessPoints: AccessPointMap;
     private _accessPointsSubject: BehaviorSubject<AccessPointMap>;
+
+    /** 
+     * Continuously updated map of access points
+     * Structured as a map where the key is the path of the access point
+     * and the value is the access point data.
+     * The Access Point path can be compared against the ActiveAccessPoint value of
+     * WifiDevice properties to determine which Access Point is connected
+     * */
     public accessPoints$: Observable<AccessPointMap>;
-    public get accessPoints(): AccessPointProperties[] {
-        return Object.values(this._accessPoints);
+    /** Latest found access points as a one-time value */
+    public get accessPoints(): AccessPointMap {
+        return this._accessPoints;
     }
     
     private constructor(
         bus: DBus.DBusConnection,
         devicePath: string,
-        deviceInterface: DBus.DBusInterface,
         wifiDeviceInterface: DBus.DBusInterface,
         propertiesInterface: DBus.DBusInterface,
         initialProperties: any,
@@ -43,7 +53,6 @@ export class WifiDevice {
             this._bus = bus;
             this._devicePath = devicePath;
 
-            this._deviceInterface = deviceInterface;
             this._wifiDeviceInterface = wifiDeviceInterface;
 
             this._propertiesInterface = propertiesInterface;
@@ -59,6 +68,13 @@ export class WifiDevice {
             this._listenForAccessPoints();
     }
 
+    /**
+     * Initializes a new WifiDevice
+     * You should use networkManager.wifiDevice() unless you know what you're doing.
+     * @param bus An instance of a DBus connection
+     * @param devicePath The path of the wifi device DBus object
+     * @returns Promise of a WifiDevice
+     */
     public static async init(bus: DBus.DBusConnection, devicePath: string): Promise<WifiDevice> {
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
@@ -67,6 +83,13 @@ export class WifiDevice {
                 let propertiesInterface = await objectInterface(bus, devicePath, 'org.freedesktop.DBus.Properties');
                 
                 let deviceProperties = await getAllProperties(deviceInterface);
+                if(deviceProperties.Ip4Address === 0) {
+                    deviceProperties.Ip4Address = null;
+                } else {
+                    let ipInteger = deviceProperties.Ip4Address;
+                    let byteArray = int32ToByteArray(ipInteger);
+                    deviceProperties.Ip4Address = byteArray.reverse().join(".");
+                }
 
                 let wifiDeviceProperties = await getAllProperties(wifiDeviceInterface);
 
@@ -89,7 +112,6 @@ export class WifiDevice {
                     new WifiDevice(
                         bus,
                         devicePath,
-                        deviceInterface,
                         wifiDeviceInterface,
                         propertiesInterface,
                         initialProperties,
@@ -102,6 +124,10 @@ export class WifiDevice {
         })
     }
 
+    /**
+     * Ask the wifi device to start scanning.
+     * Scanning is complete when the WifiDevice's LastScan property is updated
+     */
     public async requestScan(): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -113,7 +139,11 @@ export class WifiDevice {
         });
     }
     
-    public async activateConnection(connectionProfilePath: string): Promise<string> {
+    /**
+     * Activates a connection based on a connection profile path
+     * @param connectionProfilePath The path to the connection profile to activate
+     */
+    public async activateConnection(connectionProfilePath: ConnectionProfilePath): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
             try {
                 let networkManagerInterface = await objectInterface(this._bus, "/org/freedesktop/NetworkManager", "org.freedesktop.NetworkManager");
@@ -128,6 +158,15 @@ export class WifiDevice {
     private _listenForPropertyChanges() {
         signal(this._propertiesInterface, "PropertiesChanged").subscribe((propertyChangeInfo: any[]) => {
             let propertyChanges = propertyChangeInfo[1];
+            if(propertyChanges.Ip4Address) {
+                if(propertyChanges.Ip4Address === 0) {
+                    propertyChanges.Ip4Address = null;
+                } else {
+                    let ipInteger = propertyChanges.Ip4Address;
+                    let byteArray = int32ToByteArray(ipInteger);
+                    propertyChanges.Ip4Address = byteArray.reverse().join(".");
+                }
+            }
             Object.assign(this._properties, propertyChanges);
             this._propertiesSubject.next(this._properties);
         })

@@ -2,24 +2,37 @@ import DBus from "dbus";
 import { BehaviorSubject, Observable } from "rxjs";
 import { call, getAllProperties, objectInterface, signal, stringToByteArray } from "./util";
 import { v4 as uuidv4 } from 'uuid';
+import { ConnectionProfile, ConnectionProfilePath, ConnectionSettingsManagerProperties } from "./dbus-types";
 
+/**
+ * Manages the saving and retrieving of connection profiles and the device's hostname
+ * When connecting to a network (wired or wireless), you must provide a connection profile
+ * by either creating one with `addConnectionProfile()` or using a saved connection profile.
+ */
 export class ConnectionSettingsManager {
 
     private _bus: DBus.DBusConnection;
     private _connectionSettingsManagerInterface: DBus.DBusInterface;
-
     private _propertiesInterface: DBus.DBusInterface;
-    private _properties: any;
-    private _propertiesSubject: BehaviorSubject<any>;
-    public properties$: Observable<any>;
-    public get properties(): any {
+
+    private _properties: ConnectionSettingsManagerProperties;
+    private _propertiesSubject: BehaviorSubject<ConnectionSettingsManagerProperties>;
+
+    /** Continuously updated properties of the ConnectionSettingsManager */
+    public properties$: Observable<ConnectionSettingsManagerProperties>;
+    /** Get a one-time value of the latest ConnectionSettingsManager properties */
+    public get properties(): ConnectionSettingsManagerProperties {
         return this._properties;
     }
 
-    private _connectionProfiles: any;
-    private _connectionProfilesSubject: BehaviorSubject<any>;
-    public connectionProfiles$: Observable<any>;
-    public get connectionProfiles(): any {
+    private _connectionProfiles: ConnectionProfile[];
+    private _connectionProfilesSubject: BehaviorSubject<ConnectionProfile[]>;
+
+    /** Continuously updated saved connection profiles */
+    public connectionProfiles$: Observable<ConnectionProfile[]>;
+
+    /** Get a one-time value of the latest saved connection profiles */
+    public get connectionProfiles(): ConnectionProfile[] {
         return this._connectionProfiles;
     }
 
@@ -46,6 +59,11 @@ export class ConnectionSettingsManager {
             this._listenForConnections();
     }
 
+    /**
+     * Initializes a new ConnectionSettingsManager given a DBus connection
+     * @constructor
+     * @param bus The system DBus instance to use for communicating with NetworkManager
+     */
     public static async init(bus: DBus.DBusConnection): Promise<ConnectionSettingsManager> {
         return new Promise<ConnectionSettingsManager>(async (resolve, reject) => {
             try {
@@ -81,8 +99,15 @@ export class ConnectionSettingsManager {
         });
     }
 
-    public addConnectionProfile(connectionSettings: any): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
+    /**
+     * Adds a new connection profile and returns the path of the new profile
+     * @param connectionSettings Connection settings to use when constructing the profile
+     * @returns Promise of the new connection profile path
+     * @see https://developer.gnome.org/NetworkManager/stable/settings-connection.html
+     * @see https://developer.gnome.org/NetworkManager/stable/nm-settings-nmcli.html
+     */
+    public addConnectionProfile(connectionSettings: ConnectionProfile): Promise<ConnectionProfilePath> {
+        return new Promise<ConnectionProfilePath>(async (resolve, reject) => {
             try {
                 let connectionProfilePath = await call(this._connectionSettingsManagerInterface, "AddConnection", {}, connectionSettings);
                 resolve(connectionProfilePath);
@@ -92,7 +117,14 @@ export class ConnectionSettingsManager {
         });
     }
 
-    public addWifiConnection(ssid: string, hidden: boolean, password?: string): Promise<string> {
+    /**
+     * Convenience function to add new WPA wifi connection profiles
+     * @param ssid SSID of the network to connect to as a string
+     * @param hidden Whether or not the network has a hidden SSID
+     * @param password The password of the network
+     * @returns Promise of the new connection profile's path
+     */
+    public addWifiWpaConnection(ssid: string, hidden: boolean, password?: string): Promise<ConnectionProfilePath> {
         let connectionProfile: any = {
             connection: {
               type: "802-11-wireless",
@@ -128,23 +160,16 @@ export class ConnectionSettingsManager {
         return this.addConnectionProfile(connectionProfile);
     }
 
-    public removeConnectionProfile(profilePath: string): Promise<void> {
+    /**
+     * Deactivates and deletes a connection profile
+     * This is used to implement "forget wifi network" functionality
+     * @param profilePath The connection profile path to remove
+     */
+    public removeConnectionProfile(profilePath: ConnectionProfilePath): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 let connectionProfileInterface = await objectInterface(this._bus, profilePath, "org.freedesktop.NetworkManager.Settings.Connection");
                 await call(connectionProfileInterface, "Delete", {});
-                resolve();
-            } catch(err) {
-                reject(err);
-            }
-        });
-    }
-
-    public updateConnectionProfile(profilePath: string, connectionSettings: any): Promise<void> {
-        return new Promise<void>(async (resolve, reject) => {
-            try {
-                let connectionProfileInterface = await objectInterface(this._bus, profilePath, "org.freedesktop.NetworkManager.Settings.Connection");
-                await call(connectionProfileInterface, "Delete", {}, connectionSettings);
                 resolve();
             } catch(err) {
                 reject(err);
