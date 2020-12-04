@@ -1,0 +1,36 @@
+import { Observable } from 'rxjs';
+import { AccessPoint, AccessPointPath, ConnectionSettingsPath, ActiveConnectionPath, NetworkManagerProperties } from './dbus-types';
+export declare class NetworkManager {
+    private static _bus;
+    private _networkManagerInterface;
+    private _settingsInterface;
+    private _wifiDevicePath;
+    private _wifiDeviceInterface;
+    private _savedWpaConnections;
+    private _networkManagerProperties;
+    private _networkManagerPropertiesSubject;
+    networkManagerProperties$: Observable<NetworkManagerProperties>;
+    get networkManagerProperties(): NetworkManagerProperties;
+    private _accessPoints;
+    private _accessPointsSubject;
+    accessPoints$: Observable<AccessPoint[]>;
+    get accessPoints(): AccessPoint[];
+    private constructor();
+    static init(): Promise<NetworkManager>;
+    requestScan(): Promise<null>;
+    addNewWpaConnection(priority: number, ssid: string, password: string): Promise<ConnectionSettingsPath>;
+    activateConnection(connectionSettingsPath: ConnectionSettingsPath, accessPointPath?: AccessPointPath): Promise<ActiveConnectionPath>;
+    wifiEnabled(enabled: boolean): Promise<void>;
+    ethernetEnabled(enabled: boolean): Promise<void>;
+    private _listenForConnectionSettings;
+    private _listenForAccessPoints;
+    private _listenForNetworkManagerProperties;
+    private static _savedWpaConnections;
+    private static _discoveredAccessPoints;
+    private static _accessPointProperties;
+    private static _wifiDevice;
+    private static _networkManagerProperties;
+    private static _getInterface;
+    private static _byteArrayToString;
+    private static _stringToByteArray;
+}

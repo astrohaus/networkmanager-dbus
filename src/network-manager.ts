@@ -20,7 +20,7 @@ export class NetworkManager {
     private static _wifiDeviceSingleton: WifiDevice;
     private static _connectionSettingsManagerSingleton: ConnectionSettingsManager;
 
-    private static _bus: DBus.DBusConnection = DBus.getBus('system');
+    private static _bus: DBus.DBusConnection;
 
     private _networkManagerInterface: DBus.DBusInterface;
 
@@ -35,7 +35,7 @@ export class NetworkManager {
     public get properties(): NetworkManagerProperties {
         return this._properties;
     }
-    
+
     private constructor(
         networkManagerInterface: DBus.DBusInterface,
         propertiesInterface: DBus.DBusInterface,
@@ -64,9 +64,10 @@ export class NetworkManager {
 
         return new Promise<NetworkManager>(async (resolve, reject) => {
             try {
-                let networkManagerInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
+                NetworkManager._bus = DBus.getBus('system');
+                let networkManagerInterface = await objectInterface(NetworkManager._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
 
-                let propertiesInterface = await objectInterface(this._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.DBus.Properties');
+                let propertiesInterface = await objectInterface(NetworkManager._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.DBus.Properties');
                 let initialProperties = await getAllProperties(networkManagerInterface);
 
                 let networkManager = new NetworkManager(
