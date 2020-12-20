@@ -1,6 +1,6 @@
 {
   "name": "networkmanager-dbus",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A nodejs interface to communicate with NetworkManager via DBus",
   "author": "Bailey Blankenship <bailey.blankenship@dropworks.com>",
   "main": "lib/index.js",
@@ -8,6 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "node lib/test.js",
     "debug": "npm run build && node --inspect lib/test.js",
     "prepublish": "npm run build"
   },
@@ -33,6 +34,6 @@
     "uuid": "^8.3.1"
   },
   "os": [
-    "!win32"
+    "linux"
   ]
 }

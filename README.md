@@ -1,15 +1,20 @@
 # NetworkManager DBus Client for NodeJS
 
 ## Credits
+
 ### [Node-DBus](https://github.com/Shouqun/node-dbus)
+
 Thanks to [Shouqun](https://github.com/Shouqun) for their fantastic DBus library. This library powers the code that interacts with DBus. I also use their install instructions in this README.
 
 ### [Ian's Tech Blog – Fun With NetworkManager](http://cheesehead-techblog.blogspot.com/2012/09/dbus-tutorial-fun-with-network-manager.html)
+
 Great tutorial on basic interaction with NetworkManager via DBus
 
 ## Introduction
+
 NetworkManager is the program that manages network connections on Ubuntu and BalenaOS Systems (probably on some other Linux flavors too).
 It's super powerful; you can configure a connection to pretty much any kind of network including:
+
 * Enterprise WiFi
 * Bluetooth
 * Cellular Modems
@@ -23,24 +28,25 @@ an Electron app, but it'll work well with any NodeJS app.
 
 First, follow the platform-specific instructions below. These are taken almost word-for-word from [Shouqun's](https://github.com/Shouqun/node-dbus) README for their DBus library:
 
-##### Linux
+### Linux
 
-```
+```terminal
 npm install -g node-gyp
 sudo apt-get install libdbus-1-dev
 sudo apt-get install libglib2.0-dev
 ```
 
-##### Mac
+### Mac
 
-```
+```terminal
 npm install -g node-gyp
 sudo brew install pkg-config dbus
 sudo brew install glib
 ```
 
 Then, you can install this library with:
-```
+
+```terminal
 npm install networkmanager-dbus
 ```
 
@@ -100,6 +106,7 @@ await wifiDevice.activateConnection(connectionProfilePath);
 ```
 
 ### Listen to Ethernet Cable Plug/Unplug Events
+
 ```typescript
 import { NetworkManager } from "network-manager-dbus";
 
@@ -135,7 +142,7 @@ Contributions are welcome! Just submit a PR on Gitlab.
 
 ## Additional Resources
 
-- [Network Manager DBus API](https://developer.gnome.org/NetworkManager/stable/spec.html)
+* [Network Manager DBus API](https://developer.gnome.org/NetworkManager/stable/spec.html)
 
 ### Closing Remarks
 
