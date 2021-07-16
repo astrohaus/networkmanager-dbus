@@ -2,7 +2,7 @@ import { NetworkManager } from './network-manager';
 import { WifiDevice } from './wifi-device';
 import { EthernetDevice } from './ethernet-device';
 import { ConnectionSettingsManager } from './connection-settings-manager';
-import { 
+import {
     DeviceType,
     AccessPointFlags,
     AccessPointSecurityFlags,
@@ -21,7 +21,7 @@ import {
     ConnectionProfilePath,
     ActiveConnectionPath,
     DevicePath,
-    AccessPointPath
+    AccessPointPath,
 } from './dbus-types';
 
 export {
@@ -47,5 +47,5 @@ export {
     ConnectionProfilePath,
     ActiveConnectionPath,
     DevicePath,
-    AccessPointPath
-}
+    AccessPointPath,
+};

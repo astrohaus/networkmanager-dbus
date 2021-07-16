@@ -125,7 +125,7 @@ export enum AccessPointFlags {
 }
 
 /**
- * 802.11 access point security and authentication flags. 
+ * 802.11 access point security and authentication flags.
  * These flags describe the current security requirements of an access point as determined from the access point's beacon.
  * @enum {number}
  */
@@ -214,7 +214,7 @@ export enum Metered {
     NO = 2,
     /** @member {number} */
     /** Metered, the value was guessed */
-    GUESS_YES = 3, 
+    GUESS_YES = 3,
     /** @member {number} */
     /** Not metered, the value was guessed */
     GUESS_NO = 4,
@@ -609,25 +609,25 @@ export enum DeviceStateReason {
  */
 export interface AccessPointProperties {
     /** @member {number} */
-    /** 
-     * Flags describing the capabilities of the access point. 
-     * 
+    /**
+     * Flags describing the capabilities of the access point.
+     *
      * @see AccessPointFlags
      * */
     Flags: number;
 
     /** @member {number} */
-    /** 
+    /**
      * Flags describing the access point's capabilities according to WPA (Wifi Protected Access).
-     *  
+     *
      * @see AccessPointSecurityFlags
      * */
     WpaFlags: number;
 
     /** @member {number} */
-    /** 
+    /**
      * Flags describing the access point's capabilities according to the RSN (Robust Secure Network) protocol.
-     * 
+     *
      * @see AccessPointSecurityFlags
      *  */
     RsnFlags: number;
@@ -735,29 +735,28 @@ export interface NetworkManagerProperties {
     Capabilities: number[];
 
     /** @member {number} */
-    /** 
-     * The overall state of the NetworkManager daemon. 
+    /**
+     * The overall state of the NetworkManager daemon.
      * This takes state of all active connections and the connectivity state into account to produce a single indicator of the network accessibility status.
-     * The graphical shells may use this property to provide network connection status indication and applications may use this to check if Internet connection is accessible. 
+     * The graphical shells may use this property to provide network connection status indication and applications may use this to check if Internet connection is accessible.
      * Shell that is able to cope with captive portals should use the "Connectivity" property to decide whether to present a captive portal authentication dialog.
-    */
+     */
     State: NetworkManagerState;
 
-    /** 
-     * The result of the last connectivity check. 
+    /**
+     * The result of the last connectivity check.
      * The connectivity check is triggered automatically when a default connection becomes available, periodically and by calling a CheckConnectivity() method.
-     * This property is in general useful for the graphical shell to determine whether the Internet access is being hijacked by an authentication gateway (a "captive portal"). 
+     * This property is in general useful for the graphical shell to determine whether the Internet access is being hijacked by an authentication gateway (a "captive portal").
      * In such case it would typically present a web browser window to give the user a chance to authenticate and call CheckConnectivity() when the user submits a form or dismisses the window.
-     * To determine the whether the user is able to access the Internet without dealing with captive portals (e.g. to provide a network connection indicator or disable controls that require Internet access), the "State" property is more suitable. 
+     * To determine the whether the user is able to access the Internet without dealing with captive portals (e.g. to provide a network connection indicator or disable controls that require Internet access), the "State" property is more suitable.
      * */
     Connectivity: ConnectivityState;
 
-
     /** @member {boolean} */
-    /** 
-     * Indicates whether connectivity checking service has been configured. This may return true even if the service is not currently enabled. 
+    /**
+     * Indicates whether connectivity checking service has been configured. This may return true even if the service is not currently enabled.
      * This is primarily intended for use in a privacy control panel, as a way to determine whether to show an option to enable/disable the feature.
-    */
+     */
     ConnectivityCheckAvailable: boolean;
 
     /** @member {boolean} */
@@ -769,10 +768,10 @@ export interface NetworkManagerProperties {
     ConnectivityCheckUri: string;
 
     /** @member {any} */
-    /** 
-     * Dictionary of global DNS settings where the key is one of "searches", "options" and "domains". 
-     * The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively. 
-     * The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options". 
+    /**
+     * Dictionary of global DNS settings where the key is one of "searches", "options" and "domains".
+     * The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively.
+     * The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options".
      * "servers" is a string array of DNS servers, "options" is a string array of domain-specific options.
      */
     GlobalDnsConfiguration: any;
@@ -789,10 +788,10 @@ export interface ConnectionProfile {
         'interface-name': string;
         type: '802-11-wireless' | '802-3-ethernet';
         uuid: string;
-    },
-    ipv4: any,
-    ipv6: any,
-    proxy: {}
+    };
+    ipv4: any;
+    ipv6: any;
+    proxy: {};
 }
 
 /**
@@ -854,7 +853,7 @@ interface DeviceProperties {
 
     /** The current state and reason for changing to that state. Keys are state numbers in string format; values are DeviceStateReasons */
     StateReason: {
-        [key: string]: DeviceStateReason
+        [key: string]: DeviceStateReason;
     };
 
     /** Object path of an ActiveConnection object that "owns" this device during activation. The ActiveConnection object tracks the life-cycle of a connection to a specific network and implements the org.freedesktop.NetworkManager.Connection.Active D-Bus interface. */
@@ -938,7 +937,7 @@ interface DeviceProperties {
 /**
  * Properties for the wifi device. Inherits from generic device properties.
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Device.html
- * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Device.Wireless.html 
+ * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Device.Wireless.html
  */
 export interface WifiDeviceProperties extends DeviceProperties {
     /** member {string} */

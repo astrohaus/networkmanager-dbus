@@ -1,10 +1,10 @@
-import DBus = require("dbus");
-import { BehaviorSubject, Observable } from "rxjs";
-import { ConnectionSettingsManager } from "./connection-settings-manager";
-import { DeviceType, NetworkManagerProperties } from "./dbus-types";
-import { EthernetDevice } from "./ethernet-device";
-import { call, getAllProperties, objectInterface, setProperty, signal } from "./util";
-import { WifiDevice } from "./wifi-device";
+import DBus = require('dbus');
+import { BehaviorSubject, Observable } from 'rxjs';
+import { ConnectionSettingsManager } from './connection-settings-manager';
+import { DeviceType, NetworkManagerProperties } from './dbus-types';
+import { EthernetDevice } from './ethernet-device';
+import { call, getAllProperties, objectInterface, setProperty, signal } from './util';
+import { WifiDevice } from './wifi-device';
 
 /**
  * Manages communication with the NetworkManager over DBus
@@ -14,7 +14,6 @@ import { WifiDevice } from "./wifi-device";
  * - Connection Settings Manager
  */
 export class NetworkManager {
-
     private static _networkManagerSingleton: NetworkManager;
     private static _ethernetDeviceSingleton: EthernetDevice;
     private static _wifiDeviceSingleton: WifiDevice;
@@ -39,16 +38,16 @@ export class NetworkManager {
     private constructor(
         networkManagerInterface: DBus.DBusInterface,
         propertiesInterface: DBus.DBusInterface,
-        initialProperties: any
-        ) {
-            this._networkManagerInterface = networkManagerInterface;
+        initialProperties: any,
+    ) {
+        this._networkManagerInterface = networkManagerInterface;
 
-            this._propertiesInterface = propertiesInterface;
-            this._properties = initialProperties;
-            this._propertiesSubject = new BehaviorSubject<any>(this._properties);
-            this.properties$ = this._propertiesSubject.asObservable();
+        this._propertiesInterface = propertiesInterface;
+        this._properties = initialProperties;
+        this._propertiesSubject = new BehaviorSubject<any>(this._properties);
+        this.properties$ = this._propertiesSubject.asObservable();
 
-            this._listenForPropertyChanges();
+        this._listenForPropertyChanges();
     }
 
     /**
@@ -58,28 +57,36 @@ export class NetworkManager {
      */
     public static async init(): Promise<NetworkManager> {
         // If the singleton exists, return it and exit
-        if(NetworkManager._networkManagerSingleton) {
+        if (NetworkManager._networkManagerSingleton) {
             return Promise.resolve(NetworkManager._networkManagerSingleton);
         }
 
         return new Promise<NetworkManager>(async (resolve, reject) => {
             try {
                 NetworkManager._bus = DBus.getBus('system');
-                let networkManagerInterface = await objectInterface(NetworkManager._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.NetworkManager');
+                let networkManagerInterface = await objectInterface(
+                    NetworkManager._bus,
+                    '/org/freedesktop/NetworkManager',
+                    'org.freedesktop.NetworkManager',
+                );
 
-                let propertiesInterface = await objectInterface(NetworkManager._bus, '/org/freedesktop/NetworkManager', 'org.freedesktop.DBus.Properties');
+                let propertiesInterface = await objectInterface(
+                    NetworkManager._bus,
+                    '/org/freedesktop/NetworkManager',
+                    'org.freedesktop.DBus.Properties',
+                );
                 let initialProperties = await getAllProperties(networkManagerInterface);
 
                 let networkManager = new NetworkManager(
-                    networkManagerInterface, 
+                    networkManagerInterface,
                     propertiesInterface,
-                    initialProperties
+                    initialProperties,
                 );
 
                 NetworkManager._networkManagerSingleton = networkManager;
 
                 resolve(networkManager);
-            } catch(err) {
+            } catch (err) {
                 reject(`Error initializing network manager: ${err}`);
             }
         });
@@ -93,34 +100,37 @@ export class NetworkManager {
      */
     public wifiDevice(): Promise<WifiDevice> {
         // If the singleton exists, return it and exit
-        if(NetworkManager._wifiDeviceSingleton) {
+        if (NetworkManager._wifiDeviceSingleton) {
             return Promise.resolve(NetworkManager._wifiDeviceSingleton);
         }
 
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, "GetAllDevices", {});
+                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices', {});
                 const forLoop = async () => {
-                    for(let i = 0; i < allDevicePaths.length; i++) {
-                        let device = await objectInterface(NetworkManager._bus, allDevicePaths[i], 'org.freedesktop.NetworkManager.Device');
+                    for (let i = 0; i < allDevicePaths.length; i++) {
+                        let device = await objectInterface(
+                            NetworkManager._bus,
+                            allDevicePaths[i],
+                            'org.freedesktop.NetworkManager.Device',
+                        );
                         let properties = await getAllProperties(device);
-                        
-                        if(properties.DeviceType === DeviceType.WIFI) {
+
+                        if (properties.DeviceType === DeviceType.WIFI) {
                             let wifiDevice = await WifiDevice.init(NetworkManager._bus, allDevicePaths[i]);
                             NetworkManager._wifiDeviceSingleton = wifiDevice;
                             resolve(wifiDevice);
                             return;
                         }
                     }
-                }
-    
+                };
+
                 await forLoop();
                 reject(`No wifi device`);
-            } catch(err) {
+            } catch (err) {
                 reject(err);
             }
-            
-        })
+        });
     }
 
     /**
@@ -131,34 +141,37 @@ export class NetworkManager {
      */
     public ethernetDevice(): Promise<EthernetDevice> {
         // If the singleton exists, return it and exit
-        if(NetworkManager._ethernetDeviceSingleton) {
+        if (NetworkManager._ethernetDeviceSingleton) {
             return Promise.resolve(NetworkManager._ethernetDeviceSingleton);
         }
 
         return new Promise<EthernetDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, "GetAllDevices", {});
+                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices', {});
                 const forLoop = async () => {
-                    for(let i = 0; i < allDevicePaths.length; i++) {
-                        let device = await objectInterface(NetworkManager._bus, allDevicePaths[i], 'org.freedesktop.NetworkManager.Device');
+                    for (let i = 0; i < allDevicePaths.length; i++) {
+                        let device = await objectInterface(
+                            NetworkManager._bus,
+                            allDevicePaths[i],
+                            'org.freedesktop.NetworkManager.Device',
+                        );
                         let properties = await getAllProperties(device);
-                        
-                        if(properties.DeviceType === DeviceType.ETHERNET) {
+
+                        if (properties.DeviceType === DeviceType.ETHERNET) {
                             let ethernetDevice = await EthernetDevice.init(NetworkManager._bus, allDevicePaths[i]);
                             NetworkManager._ethernetDeviceSingleton = ethernetDevice;
                             resolve(ethernetDevice);
                             return;
                         }
                     }
-                }
-    
+                };
+
                 await forLoop();
                 reject(`No ethernet device`);
-            } catch(err) {
+            } catch (err) {
                 reject(err);
             }
-            
-        })
+        });
     }
 
     /**
@@ -168,7 +181,7 @@ export class NetworkManager {
      */
     public connectionSettingsManager(): Promise<ConnectionSettingsManager> {
         // If the singleton exists, return it and exit
-        if(NetworkManager._connectionSettingsManagerSingleton) {
+        if (NetworkManager._connectionSettingsManagerSingleton) {
             return Promise.resolve(NetworkManager._connectionSettingsManagerSingleton);
         }
 
@@ -177,7 +190,7 @@ export class NetworkManager {
                 let connectionSettingsManager = await ConnectionSettingsManager.init(NetworkManager._bus);
                 NetworkManager._connectionSettingsManagerSingleton = connectionSettingsManager;
                 resolve(connectionSettingsManager);
-            } catch(err) {
+            } catch (err) {
                 reject(err);
             }
         });
@@ -188,15 +201,14 @@ export class NetworkManager {
      * @param enable If true, enable wireless; if false, disable wireless
      */
     public enableWireless(enable: boolean) {
-        setProperty(this._networkManagerInterface, "WirelessEnabled", enable);
+        setProperty(this._networkManagerInterface, 'WirelessEnabled', enable);
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, "PropertiesChanged").subscribe(async (propertyChangeInfo: any[]) => {
+        signal(this._propertiesInterface, 'PropertiesChanged').subscribe(async (propertyChangeInfo: any[]) => {
             let changedProperties: Partial<NetworkManagerProperties> = propertyChangeInfo[1];
             Object.assign(this._properties, changedProperties);
             this._propertiesSubject.next(this._properties);
-        })
+        });
     }
-
 }

@@ -15,16 +15,16 @@ Great tutorial on basic interaction with NetworkManager via DBus
 NetworkManager is the program that manages network connections on Ubuntu and BalenaOS Systems (probably on some other Linux flavors too).
 It's super powerful; you can configure a connection to pretty much any kind of network including:
 
-* Enterprise WiFi
-* Bluetooth
-* Cellular Modems
+- Enterprise WiFi
+- Bluetooth
+- Cellular Modems
 
 This library provides some basic wrapper functionality for NodeJS apps. It was developed to perform basic wifi provisioning from within
 an Electron app, but it'll work well with any NodeJS app.
 
 ## Installation
 
-*Note*: This has only been tested on Ubuntu Linux. It should work fine on other Linux distros with some setup, and it supposedly works on Mac as well.
+_Note_: This has only been tested on Ubuntu Linux. It should work fine on other Linux distros with some setup, and it supposedly works on Mac as well.
 
 First, follow the platform-specific instructions below. These are taken almost word-for-word from [Shouqun's](https://github.com/Shouqun/node-dbus) README for their DBus library:
 
@@ -55,15 +55,15 @@ npm install networkmanager-dbus
 ### Scan for Local Access Points
 
 ```typescript
-import { NetworkManager } from "network-manager-dbus";
+import { NetworkManager } from 'network-manager-dbus';
 
 let networkManager = await NetworkManager.init();
 let wifiDevice = await networkManager.wifiDevice();
 
 // Subscribe to discovered access points
-wifiDevice.accessPoints$.subscribe(accessPoints => {
-    console.log(`access points:`);
-    console.log(accessPoints);
+wifiDevice.accessPoints$.subscribe((accessPoints) => {
+  console.log(`access points:`);
+  console.log(accessPoints);
 });
 
 // Requests a network scan
@@ -75,30 +75,34 @@ wifiDevice.requestScan();
 ### Connect to a non-enterprise Wifi Network
 
 ```typescript
-import { NetworkManager, DeviceState } from "network-manager-dbus";
+import { NetworkManager, DeviceState } from 'network-manager-dbus';
 
 let networkManager = await NetworkManager.init();
 let wifiDevice = await networkManager.wifiDevice();
 let connectionSettingsManager = await networkManager.connectionSettingsManager();
 
 // Subscribe to WifiDevice properties
-wifiDevice.properties$.subscribe(properties => {
-    console.log(`WiFi Status:`);
-    console.log(`Connection state: ${DeviceState[properties.State]}`);
-    if(properties.ActiveAccessPoint) {
-        if(wifiDevice.accessPoints[properties.ActiveAccessPoint]) {
-            console.log(`Connected to access point:`);
-            console.log(wifiDevice.accessPoints[properties.ActiveAccessPoint]);
-        } else {
-            console.log(`Not connected to a discovered access point`);
-        }
+wifiDevice.properties$.subscribe((properties) => {
+  console.log(`WiFi Status:`);
+  console.log(`Connection state: ${DeviceState[properties.State]}`);
+  if (properties.ActiveAccessPoint) {
+    if (wifiDevice.accessPoints[properties.ActiveAccessPoint]) {
+      console.log(`Connected to access point:`);
+      console.log(wifiDevice.accessPoints[properties.ActiveAccessPoint]);
     } else {
-        console.log(`Not connected to an Access Point`);
+      console.log(`Not connected to a discovered access point`);
     }
+  } else {
+    console.log(`Not connected to an Access Point`);
+  }
 });
 
 let networkIsHidden = false;
-let connectionProfilePath = await connectionSettingsManager.addWifiWpaConnection("MY_SSID", networkIsHidden, "MY_PASSWORD");
+let connectionProfilePath = await connectionSettingsManager.addWifiWpaConnection(
+  'MY_SSID',
+  networkIsHidden,
+  'MY_PASSWORD',
+);
 
 // After the connection is activated, the wifiDevice.properties$ observable will update with
 // a new ActiveAccessPoint
@@ -108,17 +112,17 @@ await wifiDevice.activateConnection(connectionProfilePath);
 ### Listen to Ethernet Cable Plug/Unplug Events
 
 ```typescript
-import { NetworkManager } from "network-manager-dbus";
+import { NetworkManager } from 'network-manager-dbus';
 
 let networkManager = await NetworkManager.init();
 let ethernetDevice = await networkManager.ethernetDevice();
 
-ethernetDevice.properties$.subscribe(properties => {
-    if(properties.Carrier) {
-        console.log("Cable plugged in");
-    } else {
-        console.warn("Cable unplugged!");
-    }
+ethernetDevice.properties$.subscribe((properties) => {
+  if (properties.Carrier) {
+    console.log('Cable plugged in');
+  } else {
+    console.warn('Cable unplugged!');
+  }
 });
 ```
 
@@ -142,7 +146,7 @@ Contributions are welcome! Just submit a PR on Gitlab.
 
 ## Additional Resources
 
-* [Network Manager DBus API](https://developer.gnome.org/NetworkManager/stable/spec.html)
+- [Network Manager DBus API](https://developer.gnome.org/NetworkManager/stable/spec.html)
 
 ### Closing Remarks
 
