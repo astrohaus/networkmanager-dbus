@@ -1,8 +1,13 @@
-import DBus from 'dbus';
+import DBus, { Variant } from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { call, getAllProperties, objectInterface, signal, stringToByteArray } from './util';
 import { v4 as uuidv4 } from 'uuid';
-import { ConnectionProfile, ConnectionProfilePath, ConnectionSettingsManagerProperties } from './dbus-types';
+import {
+    ConnectionProfile,
+    ConnectionProfilePath,
+    ConnectionSettingsManagerProperties,
+    Properties,
+} from './dbus-types';
 
 /**
  * Manages the saving and retrieving of connection profiles and the device's hostname
@@ -10,9 +15,9 @@ import { ConnectionProfile, ConnectionProfilePath, ConnectionSettingsManagerProp
  * by either creating one with `addConnectionProfile()` or using a saved connection profile.
  */
 export class ConnectionSettingsManager {
-    private _bus: DBus.DBusConnection;
-    private _connectionSettingsManagerInterface: DBus.DBusInterface;
-    private _propertiesInterface: DBus.DBusInterface;
+    private _bus: DBus.MessageBus;
+    private _connectionSettingsManagerInterface: DBus.ClientInterface;
+    private _propertiesInterface: DBus.ClientInterface;
 
     private _properties: ConnectionSettingsManagerProperties;
     private _propertiesSubject: BehaviorSubject<ConnectionSettingsManagerProperties>;
@@ -36,9 +41,9 @@ export class ConnectionSettingsManager {
     }
 
     private constructor(
-        bus: DBus.DBusConnection,
-        connectionSettingsManagerInterface: DBus.DBusInterface,
-        propertiesInterface: DBus.DBusInterface,
+        bus: DBus.MessageBus,
+        connectionSettingsManagerInterface: DBus.ClientInterface,
+        propertiesInterface: DBus.ClientInterface,
         initialProperties: any,
         initialConnectionProfiles: any,
     ) {
@@ -63,7 +68,7 @@ export class ConnectionSettingsManager {
      * @constructor
      * @param bus The system DBus instance to use for communicating with NetworkManager
      */
-    public static async init(bus: DBus.DBusConnection): Promise<ConnectionSettingsManager> {
+    public static async init(bus: DBus.MessageBus): Promise<ConnectionSettingsManager> {
         return new Promise<ConnectionSettingsManager>(async (resolve, reject) => {
             try {
                 let connectionSettingsManagerInterface = await objectInterface(
@@ -80,7 +85,7 @@ export class ConnectionSettingsManager {
                 let initialProperties = await getAllProperties(connectionSettingsManagerInterface);
 
                 let initialConnectionProfiles: any = {};
-                let connectionPaths: string[] = await call(connectionSettingsManagerInterface, 'ListConnections', {});
+                let connectionPaths: string[] = await call(connectionSettingsManagerInterface, 'ListConnections');
 
                 const getConnectionSettingsForConnectionPaths = async () => {
                     for (let i = 0; i < connectionPaths.length; i++) {
@@ -92,7 +97,6 @@ export class ConnectionSettingsManager {
                         initialConnectionProfiles[connectionPaths[i]] = await call(
                             connectionProfileInterface,
                             'GetSettings',
-                            {},
                         );
                     }
                 };
@@ -121,13 +125,12 @@ export class ConnectionSettingsManager {
      * @see https://developer.gnome.org/NetworkManager/stable/settings-connection.html
      * @see https://developer.gnome.org/NetworkManager/stable/nm-settings-nmcli.html
      */
-    public addConnectionProfile(connectionSettings: ConnectionProfile): Promise<ConnectionProfilePath> {
+    public addConnectionProfile(connectionSettings: Partial<ConnectionProfile>): Promise<ConnectionProfilePath> {
         return new Promise<ConnectionProfilePath>(async (resolve, reject) => {
             try {
                 let connectionProfilePath = await call(
                     this._connectionSettingsManagerInterface,
                     'AddConnection',
-                    {},
                     connectionSettings,
                 );
                 resolve(connectionProfilePath);
@@ -145,36 +148,36 @@ export class ConnectionSettingsManager {
      * @returns Promise of the new connection profile's path
      */
     public addWifiWpaConnection(ssid: string, hidden: boolean, password?: string): Promise<ConnectionProfilePath> {
-        let connectionProfile: any = {
+        let connectionProfile: Partial<ConnectionProfile> = {
             connection: {
-                type: '802-11-wireless',
-                'interface-name': 'wlan0',
-                uuid: uuidv4(),
-                id: ssid,
+                type: new Variant('s', '802-11-wireless'),
+                'interface-name': new Variant('s', 'wlan0'),
+                uuid: new Variant('s', uuidv4()),
+                id: new Variant('s', ssid),
             },
             '802-11-wireless': {
-                ssid: stringToByteArray(ssid),
-                mode: 'infrastructure',
+                ssid: new Variant('ay', stringToByteArray(ssid)),
+                mode: new Variant('s', 'infrastructure'),
             },
             ipv4: {
-                method: 'auto',
+                method: new Variant('s', 'auto'),
             },
             ipv6: {
-                method: 'ignore',
+                method: new Variant('s', 'ignore'),
             },
         };
 
         if (password) {
             connectionProfile['802-11-wireless-security'] = {
-                'key-mgmt': 'wpa-psk',
-                'auth-alg': 'open',
-                psk: password,
+                'key-mgmt': new Variant('s', 'wpa-psk'),
+                'auth-alg': new Variant('s', 'open'),
+                psk: new Variant('s', password),
             };
-            connectionProfile['802-11-wireless'].security = '802-11-wireless-security';
+            connectionProfile['802-11-wireless']!.security = new Variant('s', '802-11-wireless-security');
         }
 
         if (hidden) {
-            connectionProfile['802-11-wireless'].hidden = true;
+            connectionProfile['802-11-wireless']!.hidden = new Variant('b', true);
         }
 
         return this.addConnectionProfile(connectionProfile);
@@ -193,7 +196,7 @@ export class ConnectionSettingsManager {
                     profilePath,
                     'org.freedesktop.NetworkManager.Settings.Connection',
                 );
-                await call(connectionProfileInterface, 'Delete', {});
+                await call(connectionProfileInterface, 'Delete');
                 resolve();
             } catch (err) {
                 reject(err);
@@ -202,7 +205,7 @@ export class ConnectionSettingsManager {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: any[]) => {
+        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: Array<Properties>) => {
             let changedProperties = propertyChangeInfo[1];
             Object.assign(this._properties, changedProperties);
             this._propertiesSubject.next(this._properties);
@@ -217,7 +220,7 @@ export class ConnectionSettingsManager {
                 newConnectionPath,
                 'org.freedesktop.NetworkManager.Settings.Connection',
             );
-            this._connectionProfiles[newConnectionPath] = await call(connectionProfileInterface, 'GetSettings', {});
+            this._connectionProfiles[newConnectionPath] = await call(connectionProfileInterface, 'GetSettings');
             this._connectionProfilesSubject.next(this._connectionProfiles);
         });
 

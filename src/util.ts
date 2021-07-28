@@ -1,28 +1,21 @@
-import DBus = require('dbus');
+import DBus from 'dbus-next';
 import { Observable } from 'rxjs';
 
 export async function objectInterface(
-    bus: DBus.DBusConnection,
+    bus: DBus.MessageBus,
     objectPath: string,
     interfaceName: string,
-): Promise<DBus.DBusInterface> {
-    return new Promise<DBus.DBusInterface>((resolve, reject) => {
-        bus.getInterface(
-            'org.freedesktop.NetworkManager',
-            objectPath,
-            interfaceName,
-            (err: any, iface: DBus.DBusInterface) => {
-                if (err) {
-                    reject(`Error getting ${interfaceName} interface on ${objectPath}: ${err}`);
-                } else {
-                    resolve(iface);
-                }
-            },
-        );
-    });
+): Promise<DBus.ClientInterface> {
+    const proxyObject = await bus.getProxyObject('org.freedesktop.NetworkManager', objectPath);
+
+    try {
+        return proxyObject.getInterface(interfaceName);
+    } catch (error) {
+        throw new Error(`Error getting ${interfaceName} interface on ${objectPath}: ${error}`);
+    }
 }
 
-export function signal(objectInterface: DBus.DBusInterface, signalName: string): Observable<any[]> {
+export function signal(objectInterface: DBus.ClientInterface, signalName: string): Observable<any[]> {
     return new Observable<any>((observer) => {
         const listener = (...args: any[]) => {
             observer.next(args);
@@ -37,79 +30,66 @@ export function signal(objectInterface: DBus.DBusInterface, signalName: string):
     });
 }
 
-export async function call(
-    objectInterface: DBus.DBusInterface,
-    methodName: string,
-    options: any,
-    ...args: any[]
-): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-        if (args.length) {
-            args.push(options);
-            args.push((err: string, result: any) => {
-                if (err) {
-                    reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
-                } else {
-                    resolve(result);
-                }
-            });
-            objectInterface[methodName](...args);
-        } else {
-            objectInterface[methodName](options, (err: string, result: any) => {
-                if (err) {
-                    reject(`Error calling ${methodName} on ${objectInterface.interfaceName}: ${err}`);
-                } else {
-                    resolve(result);
-                }
-            });
-        }
-    });
+export async function call(objectInterface: DBus.ClientInterface, methodName: string, ...args: any[]): Promise<any> {
+    try {
+        const result = await objectInterface[methodName](...args);
+        return result;
+    } catch (error) {
+        throw new Error(`Error calling ${methodName} on ${objectInterface.$name}: ${error}`);
+    }
 }
 
-export async function getProperty(objectInterface: DBus.DBusInterface, propertyName: string): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-        objectInterface.getProperty(propertyName, (err, result) => {
-            if (err) {
-                reject(
-                    `Error getting property ${propertyName} on ${objectInterface.interfaceName} interface for object ${objectInterface.objectPath}: ${err}`,
-                );
-            } else {
-                resolve(result);
-            }
-        });
-    });
+export function getPropertiesInterface(object: DBus.ProxyObject) {
+    try {
+        return object.getInterface('org.freedesktop.DBus.Properties');
+    } catch (error) {
+        throw new Error(`Error getting interface for properties: ${error}`);
+    }
+}
+
+export async function getProperty(objectInterface: DBus.ClientInterface, propertyName: string): Promise<any> {
+    const object = objectInterface.$object as unknown as DBus.ProxyObject;
+    const propertiesInterface = getPropertiesInterface(object);
+
+    try {
+        return await propertiesInterface.Get(objectInterface.$name, propertyName);
+    } catch (error) {
+        throw new Error(
+            `Error getting property ${propertyName} on ${objectInterface.$name} interface for object ${object.path}: ${error}`,
+        );
+    }
 }
 
 export async function setProperty(
-    objectInterface: DBus.DBusInterface,
+    objectInterface: DBus.ClientInterface,
     propertyName: string,
     value: any,
-): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        objectInterface.setProperty(propertyName, value, (err) => {
-            if (err) {
-                reject(
-                    `Error setting property ${propertyName} on ${objectInterface.interfaceName} interface for object ${objectInterface.objectPath}: ${err}`,
-                );
-            } else {
-                resolve();
-            }
-        });
-    });
+): Promise<any> {
+    const object = objectInterface.$object as unknown as DBus.ProxyObject;
+    const propertiesInterface = getPropertiesInterface(object);
+
+    try {
+        return await propertiesInterface.Set(objectInterface.$name, propertyName, value);
+    } catch (error) {
+        throw new Error(
+            `Error setting property ${propertyName} on ${objectInterface.$name} interface for object ${object.path}: ${error}`,
+        );
+    }
 }
 
-export async function getAllProperties(objectInterface: DBus.DBusInterface): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-        objectInterface.getProperties((err, result) => {
-            if (err) {
-                reject(
-                    `Error getting all properties for object ${objectInterface.objectPath} with interface ${objectInterface.interfaceName}: ${err}`,
-                );
-            } else {
-                resolve(result);
-            }
-        });
-    });
+export async function getAllProperties(
+    objectInterface: DBus.ClientInterface,
+): Promise<Record<string, DBus.Variant<any>>> {
+    const object = objectInterface.$object as unknown as DBus.ProxyObject;
+    const propertiesInterface = getPropertiesInterface(object);
+
+    try {
+        return await propertiesInterface.GetAll(objectInterface.$name);
+    } catch (error) {
+        throw new Error(
+            `Error getting all properties for object ${objectInterface.objectPath} with interface ${objectInterface.interfaceName}: ${error}`,
+        );
+    }
 }
 
 export function byteArrayToString(array: number[]): string {

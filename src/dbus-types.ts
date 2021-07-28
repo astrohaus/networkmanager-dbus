@@ -1,3 +1,5 @@
+import { Variant } from 'dbus-next';
+
 /**
  * The type of a device enumerated by Network Manager
  * @readonly
@@ -603,145 +605,129 @@ export enum DeviceStateReason {
 }
 
 /**
+ * A generic type for DBus properties
+ */
+export interface Properties {
+    [key: string]: Variant;
+}
+
+/**
  * Wi-Fi Access Point
  *
  * @link https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.AccessPoint.html
  */
-export interface AccessPointProperties {
-    /** @member {number} */
+export interface AccessPointProperties extends Properties {
     /**
      * Flags describing the capabilities of the access point.
      *
      * @see AccessPointFlags
      * */
-    Flags: number;
+    Flags: Variant<number>;
 
-    /** @member {number} */
     /**
      * Flags describing the access point's capabilities according to WPA (Wifi Protected Access).
      *
      * @see AccessPointSecurityFlags
      * */
-    WpaFlags: number;
+    WpaFlags: Variant<number>;
 
-    /** @member {number} */
     /**
      * Flags describing the access point's capabilities according to the RSN (Robust Secure Network) protocol.
      *
      * @see AccessPointSecurityFlags
      *  */
-    RsnFlags: number;
+    RsnFlags: Variant<number>;
 
     //Returns: NM80211ApSecurityFlags
-    /** @member {string} */
     /** The Service Set Identifier identifying the access point. */
-    Ssid: string;
+    Ssid: Variant<string>;
 
-    /** @member {number} */
     /** The radio channel frequency in use by the access point, in MHz. */
-    Frequency: number;
+    Frequency: Variant<number>;
 
-    /** @member {string} */
     /** The hardware address (BSSID) of the access point. */
-    HwAddress: string;
+    HwAddress: Variant<string>;
 
-    /** @member {number} */
     /** Describes the operating mode of the access point. */
-    Mode: number;
+    Mode: Variant<number>;
 
     //Returns: NM80211Mode
-    /** @member {number} */
     /** The maximum bitrate this access point is capable of, in kilobits/second (Kb/s). */
-    MaxBitrate: number;
+    MaxBitrate: Variant<number>;
 
-    /** @member {number} */
     /** The current signal quality of the access point, in percent. */
-    Strength: number;
+    Strength: Variant<number>;
 
-    /** @member {number} */
     /** The timestamp (in CLOCK_BOOTTIME seconds) for the last time the access point was found in scan results. A value of -1 means the access point has never been found in scan results. */
-    LastSeen: number;
+    LastSeen: Variant<number>;
 }
 
 /**
  * Properties for the NetworkManager
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.html
  */
-export interface NetworkManagerProperties {
+export interface NetworkManagerProperties extends Properties {
     /** The list of realized network devices. Realized devices are those which have backing resources (eg from the kernel or a management daemon like ModemManager, teamd, etc). */
-    Devices: DevicePath[];
+    Devices: Variant<DevicePath[]>;
 
     /** The list of both realized and un-realized network devices. Un-realized devices are software devices which do not yet have backing resources, but for which backing resources can be created if the device is activated. */
-    AllDevices: DevicePath[];
+    AllDevices: Variant<DevicePath[]>;
 
-    /** @member {any[]} */
     /** The list of active checkpoints. */
-    Checkpoints: any[];
+    Checkpoints: Variant<any[]>;
 
-    /** @member {boolean} */
     /** Indicates if overall networking is currently enabled or not. See the Enable() method. */
-    NetworkingEnabled: boolean;
+    NetworkingEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** Indicates if wireless is currently enabled or not. */
-    WirelessEnabled: boolean;
+    WirelessEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** Indicates if the wireless hardware is currently enabled, i.e. the state of the RF kill switch. */
-    WirelessHardwareEnabled: boolean;
+    WirelessHardwareEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** Indicates if mobile broadband devices are currently enabled or not. */
-    WwanEnabled: boolean;
+    WwanEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** Indicates if the mobile broadband hardware is currently enabled, i.e. the state of the RF kill switch. */
-    WwanHardwareEnabled: boolean;
+    WwanHardwareEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** DEPRECATED. Doesn't have any meaning and is around only for compatibility reasons. */
-    WimaxEnabled: boolean;
+    WimaxEnabled: Variant<boolean>;
 
-    /** @member {boolean} */
     /** DEPRECATED. Doesn't have any meaning and is around only for compatibility reasons. */
-    WimaxHardwareEnabled: boolean;
+    WimaxHardwareEnabled: Variant<boolean>;
 
     /** List of active connection object paths. */
-    ActiveConnections: ActiveConnectionPath[];
+    ActiveConnections: Variant<ActiveConnectionPath[]>;
 
     /** The object path of the "primary" active connection being used to access the network. In particular, if there is no VPN active, or the VPN does not have the default route, then this indicates the connection that has the default route. If there is a VPN active with the default route, then this indicates the connection that contains the route to the VPN endpoint. */
-    PrimaryConnection: ActiveConnectionPath;
+    PrimaryConnection: Variant<ActiveConnectionPath>;
 
-    /** @member {string} */
     /** The connection type of the "primary" active connection being used to access the network. This is the same as the Type property on the object indicated by PrimaryConnection. */
-    PrimaryConnectionType: string;
+    PrimaryConnectionType: Variant<string>;
 
     /** Indicates whether the connectivity is metered. This is equivalent to the metered property of the device associated with the primary connection. */
-    Metered: Metered;
+    Metered: Variant<Metered>;
 
     /** The object path of an active connection that is currently being activated and which is expected to become the new PrimaryConnection when it finishes activating. */
-    ActivatingConnection: ActiveConnectionPath;
+    ActivatingConnection: Variant<ActiveConnectionPath>;
 
-    /** @member {boolean} */
     /** Indicates whether NM is still starting up; this becomes FALSE when NM has finished attempting to activate every connection that it might be able to activate at startup. */
-    Startup: boolean;
+    Startup: Variant<boolean>;
 
-    /** @member {string} */
     /** NetworkManager version. */
-    Version: string;
+    Version: Variant<string>;
 
-    /** @member {number[]} */
     /** The current set of capabilities. See NMCapability for currently defined capability numbers. The array is guaranteed to be sorted in ascending order without duplicates. */
-    Capabilities: number[];
+    Capabilities: Variant<number[]>;
 
-    /** @member {number} */
     /**
      * The overall state of the NetworkManager daemon.
      * This takes state of all active connections and the connectivity state into account to produce a single indicator of the network accessibility status.
      * The graphical shells may use this property to provide network connection status indication and applications may use this to check if Internet connection is accessible.
      * Shell that is able to cope with captive portals should use the "Connectivity" property to decide whether to present a captive portal authentication dialog.
      */
-    State: NetworkManagerState;
+    State: Variant<NetworkManagerState>;
 
     /**
      * The result of the last connectivity check.
@@ -750,188 +736,164 @@ export interface NetworkManagerProperties {
      * In such case it would typically present a web browser window to give the user a chance to authenticate and call CheckConnectivity() when the user submits a form or dismisses the window.
      * To determine the whether the user is able to access the Internet without dealing with captive portals (e.g. to provide a network connection indicator or disable controls that require Internet access), the "State" property is more suitable.
      * */
-    Connectivity: ConnectivityState;
+    Connectivity: Variant<ConnectivityState>;
 
-    /** @member {boolean} */
     /**
      * Indicates whether connectivity checking service has been configured. This may return true even if the service is not currently enabled.
      * This is primarily intended for use in a privacy control panel, as a way to determine whether to show an option to enable/disable the feature.
      */
-    ConnectivityCheckAvailable: boolean;
+    ConnectivityCheckAvailable: Variant<boolean>;
 
-    /** @member {boolean} */
     /** Indicates whether connectivity checking is enabled. This property can also be written to to disable connectivity checking (as a privacy control panel might want to do). */
-    ConnectivityCheckEnabled: boolean;
+    ConnectivityCheckEnabled: Variant<boolean>;
 
-    /** @member {string} */
     /** The URI that NetworkManager will hit to check if there is internet connectivity. */
-    ConnectivityCheckUri: string;
+    ConnectivityCheckUri: Variant<string>;
 
-    /** @member {any} */
     /**
      * Dictionary of global DNS settings where the key is one of "searches", "options" and "domains".
      * The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively.
      * The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options".
      * "servers" is a string array of DNS servers, "options" is a string array of domain-specific options.
      */
-    GlobalDnsConfiguration: any;
+    GlobalDnsConfiguration: Variant<any>;
 }
 
 /**
  * Properties for a connection profile
  * This is incomplete and only contains a few common properties
- * @see https://developer.gnome.org/NetworkManager/unstable/nm-settings-dbus.html
+ * @see https://developer.gnome.org/NetworkManager/stable/nm-settings-dbus.html
  */
 export interface ConnectionProfile {
+    /** https://developer.gnome.org/NetworkManager/stable/settings-connection.html */
     connection: {
-        id: string;
-        'interface-name': string;
-        type: '802-11-wireless' | '802-3-ethernet';
-        uuid: string;
+        id: Variant<string>;
+        'interface-name': Variant<string>;
+        type: Variant<'802-11-wireless' | '802-3-ethernet'>;
+        uuid: Variant<string>;
     };
-    ipv4: any;
-    ipv6: any;
-    proxy: {};
+    /** https://developer.gnome.org/NetworkManager/stable/settings-ipv4.html */
+    ipv4: Record<string, Variant<any>>;
+    /** https://developer.gnome.org/NetworkManager/stable/settings-ipv6.html */
+    ipv6: Record<string, Variant<any>>;
+    /** https://developer.gnome.org/NetworkManager/stable/settings-proxy.html */
+    proxy: Record<string, Variant<any>>;
+    /** https://developer.gnome.org/NetworkManager/stable/settings-802-11-wireless.html */
+    '802-11-wireless'?: Record<string, Variant<any>>;
+    /** https://developer.gnome.org/NetworkManager/stable/settings-802-11-wireless-security.html */
+    '802-11-wireless-security'?: Record<string, Variant<any>>;
+    /** https://developer.gnome.org/NetworkManager/stable/settings-802-3-ethernet.html */
+    '802-3-ethernet'?: Record<string, Variant<any>>;
 }
 
 /**
  * Properties for the connection settings manager
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Settings.html
  */
-export interface ConnectionSettingsManagerProperties {
+export interface ConnectionSettingsManagerProperties extends Properties {
     /** List of object paths of available network connection profiles. */
-    Connections: ConnectionProfilePath[];
+    Connections: Variant<ConnectionProfilePath[]>;
 
-    /** @member {string} */
     /** The machine hostname stored in persistent configuration. */
-    Hostname: string;
+    Hostname: Variant<string>;
 
-    /** @member {boolean} */
     /** If true, adding and modifying connections is supported. */
-    CanModify: boolean;
+    CanModify: Variant<boolean>;
 }
 
-interface DeviceProperties {
-    /** @member {string} */
+interface DeviceProperties extends Properties {
     /** Operating-system specific transient device hardware identifier. This is an opaque string representing the underlying hardware for the device, and shouldn't be used to keep track of individual devices. For some device types (Bluetooth, Modems) it is an identifier used by the hardware service (ie bluez or ModemManager) to refer to that device, and client programs use it get additional information from those services which NM does not provide. The Udi is not guaranteed to be consistent across reboots or hotplugs of the hardware. If you're looking for a way to uniquely track each device in your application, use the object path. If you're looking for a way to track a specific piece of hardware across reboot or hotplug, use a MAC address or USB serial number. Note that non-UTF-8 characters are backslash escaped. Use g_strcompress() to obtain the true (non-UTF-8) string. */
-    Udi: string;
+    Udi: Variant<string>;
 
-    /** @member {string} */
     /** The path of the device as exposed by the udev property ID_PATH. Note that non-UTF-8 characters are backslash escaped. Use g_strcompress() to obtain the true (non-UTF-8) string. */
-    Path: string;
+    Path: Variant<string>;
 
-    /** @member {string} */
     /** The name of the device's control (and often data) interface. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping. */
-    Interface: string;
+    Interface: Variant<string>;
 
-    /** @member {string} */
     /** The name of the device's data interface when available. This property may not refer to the actual data interface until the device has successfully established a data connection, indicated by the device's State becoming ACTIVATED. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping. */
-    IpInterface: string;
+    IpInterface: Variant<string>;
 
-    /** @member {string} */
     /** The driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert. */
-    Driver: string;
+    Driver: Variant<string>;
 
-    /** @member {string} */
     /** The version of the driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert. */
-    DriverVersion: string;
+    DriverVersion: Variant<string>;
 
-    /** @member {string} */
     /** The firmware version for the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert. */
-    FirmwareVersion: string;
+    FirmwareVersion: Variant<string>;
 
-    /** @member {number} */
     /** Flags describing the capabilities of the device. */
-    Capabilities: number;
+    Capabilities: Variant<number>;
 
-    /** @member {number} */
     /** IPv4 address of the device */
-    Ip4Address: string | null;
+    Ip4Address: Variant<string | null>;
 
     /** The current state of the device. */
-    State: DeviceState;
+    State: Variant<DeviceState>;
 
     /** The current state and reason for changing to that state. Keys are state numbers in string format; values are DeviceStateReasons */
-    StateReason: {
-        [key: string]: DeviceStateReason;
-    };
+    StateReason: Variant<[number, DeviceStateReason]>;
 
     /** Object path of an ActiveConnection object that "owns" this device during activation. The ActiveConnection object tracks the life-cycle of a connection to a specific network and implements the org.freedesktop.NetworkManager.Connection.Active D-Bus interface. */
-    ActiveConnection: ActiveConnectionPath;
+    ActiveConnection: Variant<ActiveConnectionPath>;
 
-    /** @member {string} */
     /** Object path of the Ip4Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state. */
-    Ip4Config: string;
+    Ip4Config: Variant<string>;
 
-    /** @member {string} */
     /** Object path of the Dhcp4Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state. */
-    Dhcp4Config: string;
+    Dhcp4Config: Variant<string>;
 
-    /** @member {string} */
     /** Object path of the Ip6Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state. */
-    Ip6Config: string;
+    Ip6Config: Variant<string>;
 
-    /** @member {string} */
     /** Object path of the Dhcp6Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state. */
-    Dhcp6Config: string;
+    Dhcp6Config: Variant<string>;
 
-    /** @member {boolean} */
     /** Whether or not this device is managed by NetworkManager. Setting this property has a similar effect to configuring the device as unmanaged via the keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value are not persistent and lost after NetworkManager restart. */
-    Managed: boolean;
+    Managed: Variant<boolean>;
 
-    /** @member {boolean} */
     /** If TRUE, indicates the device is allowed to autoconnect. If FALSE, manual intervention is required before the device will automatically connect to a known network, such as activating a connection using the device, or setting this property to TRUE. This property cannot be set to TRUE for default-unmanaged devices, since they never autoconnect. */
-    Autoconnect: boolean;
+    Autoconnect: Variant<boolean>;
 
-    /** @member {boolean} */
     /** If TRUE, indicates the device is likely missing firmware necessary for its operation. */
-    FirmwareMissing: boolean;
+    FirmwareMissing: Variant<boolean>;
 
-    /** @member {boolean} */
     /** If TRUE, indicates the NetworkManager plugin for the device is likely missing or misconfigured. */
-    NmPluginMissing: boolean;
+    NmPluginMissing: Variant<boolean>;
 
     /** The general type of the network device; ie Ethernet, Wi-Fi, etc. */
-    DeviceType: DeviceType;
+    DeviceType: Variant<DeviceType>;
 
     /** An array of object paths of every configured connection that is currently 'available' through this device. */
-    AvailableConnections: ConnectionProfilePath[];
+    AvailableConnections: Variant<ConnectionProfilePath[]>;
 
-    /** @member {string} */
     /** If non-empty, an (opaque) indicator of the physical network port associated with the device. This can be used to recognize when two seemingly-separate hardware devices are actually just different virtual interfaces to the same physical port. */
-    PhysicalPortId: string;
+    PhysicalPortId: Variant<string>;
 
-    /** @member {number} */
     /** The device MTU (maximum transmission unit). */
-    Mtu: number;
+    Mtu: Variant<number>;
 
-    /** @member {number} */
     /** Whether the amount of traffic flowing through the device is subject to limitations, for example set by service providers. */
-    Metered: Metered;
+    Metered: Variant<Metered>;
 
-    /** @member {any[]} */
     /** Array of LLDP neighborstring; each element is a dictionary mapping LLDP TLV names to variant boxed values. */
-    LldpNeighbors: any[];
+    LldpNeighbors: Variant<any[]>;
 
-    /** @member {boolean} */
     /** True if the device exists, or False for placeholder devices that do not yet exist but could be automatically created by NetworkManager if one of their AvailableConnections was activated. */
-    Real: boolean;
+    Real: Variant<boolean>;
 
-    /** @member {number} */
     /** The result of the last IPv4 connectivity check. */
-    Ip4Connectivity: ConnectivityState;
+    Ip4Connectivity: Variant<ConnectivityState>;
 
-    /** @member {number} */
     /** The result of the last IPv6 connectivity check. */
-    Ip6Connectivity: ConnectivityState;
+    Ip6Connectivity: Variant<ConnectivityState>;
 
-    /** @member {number} */
     /** The flags of the network interface. See NMDeviceInterfaceFlags for the currently defined flags. */
-    InterfaceFlags: number;
+    InterfaceFlags: Variant<number>;
 
-    /** @member {string} */
     /** The hardware address of the device. This replaces the other 'HwAddress' properties on the device-specific D-Bus interfaces. */
-    HwAddress: string;
+    HwAddress: Variant<string>;
 }
 
 /**
@@ -940,35 +902,29 @@ interface DeviceProperties {
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Device.Wireless.html
  */
 export interface WifiDeviceProperties extends DeviceProperties {
-    /** member {string} */
     /** The active hardware address of the device. */
-    HwAddress: string;
+    HwAddress: Variant<string>;
 
-    /** member {string} */
     /** The permanent hardware address of the device. */
-    PermHwAddress: string;
+    PermHwAddress: Variant<string>;
 
     /** The operating mode of the wireless device. */
-    Mode: WirelessMode;
+    Mode: Variant<WirelessMode>;
 
-    /** member {number} */
     /** The bit rate currently used by the wireless device, in kilobits/second (Kb/s). */
-    Bitrate: number;
+    Bitrate: Variant<number>;
 
     /** List of object paths of access point visible to this wireless device. */
-    AccessPoints: AccessPointPath[];
+    AccessPoints: Variant<AccessPointPath[]>;
 
-    /** member {o} */
     /** Object path of the access point currently used by the wireless device. */
-    ActiveAccessPoint: AccessPointPath;
+    ActiveAccessPoint: Variant<AccessPointPath>;
 
-    /** member {number} */
     /** The capabilities of the wireless device. */
-    WirelessCapabilities: number;
+    WirelessCapabilities: Variant<number>;
 
-    /** member {number} */
     /** The timestamp (in CLOCK_BOOTTIME milliseconds) for the last finished network scan. A value of -1 means the device never scanned for access points. */
-    LastScan: number;
+    LastScan: Variant<number>;
 }
 
 /**
@@ -977,25 +933,20 @@ export interface WifiDeviceProperties extends DeviceProperties {
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.Device.Wired.html
  */
 export interface EthernetDeviceProperties extends DeviceProperties {
-    /** @member {string} */
     /** Active hardware address of the device. */
-    HwAddress: string;
+    HwAddress: Variant<string>;
 
-    /** @member {string} */
     /** Permanent hardware address of the device. */
-    PermHwAddress: string;
+    PermHwAddress: Variant<string>;
 
-    /** @member {number} */
     /** Design speed of the device, in megabits/second (Mb/s). */
-    Speed: number;
+    Speed: Variant<number>;
 
-    /** @member {any[]} */
     /** Array of S/390 subchannels for S/390 or z/Architecture devices. */
-    S390Subchannels: any[];
+    S390Subchannels: Variant<any[]>;
 
-    /** @member {boolean} */
     /** Indicates whether the physical carrier is found (e.g. whether a cable is plugged in or not). */
-    Carrier: boolean;
+    Carrier: Variant<boolean>;
 }
 
 export type ConnectionProfilePath = string;

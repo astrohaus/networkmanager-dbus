@@ -1,7 +1,7 @@
-import DBus = require('dbus');
+import DBus from 'dbus-next';
 import { BehaviorSubject } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
-import { AccessPointProperties, ConnectionProfilePath, WifiDeviceProperties } from './dbus-types';
+import { AccessPointProperties, ConnectionProfilePath, Properties, WifiDeviceProperties } from './dbus-types';
 import { byteArrayToString, call, getAllProperties, int32ToByteArray, objectInterface, signal } from './util';
 
 type AccessPointMap = {
@@ -9,12 +9,12 @@ type AccessPointMap = {
 };
 
 export class WifiDevice {
-    private _bus: DBus.DBusConnection;
+    private _bus: DBus.MessageBus;
     private _devicePath: string;
 
-    private _wifiDeviceInterface: DBus.DBusInterface;
+    private _wifiDeviceInterface: DBus.ClientInterface;
 
-    private _propertiesInterface: DBus.DBusInterface;
+    private _propertiesInterface: DBus.ClientInterface;
     private _properties: WifiDeviceProperties;
     private _propertiesSubject: BehaviorSubject<WifiDeviceProperties>;
 
@@ -42,10 +42,10 @@ export class WifiDevice {
     }
 
     private constructor(
-        bus: DBus.DBusConnection,
+        bus: DBus.MessageBus,
         devicePath: string,
-        wifiDeviceInterface: DBus.DBusInterface,
-        propertiesInterface: DBus.DBusInterface,
+        wifiDeviceInterface: DBus.ClientInterface,
+        propertiesInterface: DBus.ClientInterface,
         initialProperties: any,
         initialAccessPoints: AccessPointMap,
     ) {
@@ -74,7 +74,7 @@ export class WifiDevice {
      * @param devicePath The path of the wifi device DBus object
      * @returns Promise of a WifiDevice
      */
-    public static async init(bus: DBus.DBusConnection, devicePath: string): Promise<WifiDevice> {
+    public static async init(bus: DBus.MessageBus, devicePath: string): Promise<WifiDevice> {
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
                 let deviceInterface = await objectInterface(bus, devicePath, 'org.freedesktop.NetworkManager.Device');
@@ -86,12 +86,12 @@ export class WifiDevice {
                 let propertiesInterface = await objectInterface(bus, devicePath, 'org.freedesktop.DBus.Properties');
 
                 let deviceProperties = await getAllProperties(deviceInterface);
-                if (deviceProperties.Ip4Address === 0) {
-                    deviceProperties.Ip4Address = null;
+                if (deviceProperties.Ip4Address.value === 0) {
+                    deviceProperties.Ip4Address.value = null;
                 } else {
-                    let ipInteger = deviceProperties.Ip4Address;
+                    let ipInteger = deviceProperties.Ip4Address.value;
                     let byteArray = int32ToByteArray(ipInteger);
-                    deviceProperties.Ip4Address = byteArray.reverse().join('.');
+                    deviceProperties.Ip4Address.value = byteArray.reverse().join('.');
                 }
 
                 let wifiDeviceProperties = await getAllProperties(wifiDeviceInterface);
@@ -100,17 +100,18 @@ export class WifiDevice {
 
                 let initialAccessPoints: AccessPointMap = {};
                 const getAccessPointDataFromPaths = async () => {
-                    for (let i = 0; i < wifiDeviceProperties.AccessPoints.length; i++) {
-                        let accessPointPath = wifiDeviceProperties.AccessPoints[i];
+                    const accessPoints = wifiDeviceProperties.AccessPoints.value;
+
+                    for (let i = 0; i < accessPoints.length; i++) {
+                        let accessPointPath = accessPoints[i];
                         let accessPointInterface = await objectInterface(
                             bus,
                             accessPointPath,
                             'org.freedesktop.NetworkManager.AccessPoint',
                         );
                         let accessPointProperties = await getAllProperties(accessPointInterface);
-                        accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
-                        initialAccessPoints[accessPointPath] =
-                            accessPointProperties as unknown as AccessPointProperties;
+                        accessPointProperties.Ssid.value = byteArrayToString(accessPointProperties.Ssid.value);
+                        initialAccessPoints[accessPointPath] = accessPointProperties as AccessPointProperties;
                     }
                 };
 
@@ -162,7 +163,6 @@ export class WifiDevice {
                 let activeConnectionPath = await call(
                     networkManagerInterface,
                     'ActivateConnection',
-                    {},
                     connectionProfilePath,
                     this._devicePath,
                     '/',
@@ -175,15 +175,15 @@ export class WifiDevice {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: any[]) => {
+        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: Array<Properties>) => {
             let propertyChanges = propertyChangeInfo[1];
             if (propertyChanges.Ip4Address) {
-                if (propertyChanges.Ip4Address === 0) {
-                    propertyChanges.Ip4Address = null;
+                if (propertyChanges.Ip4Address.value === 0) {
+                    propertyChanges.Ip4Address.value = null;
                 } else {
-                    let ipInteger = propertyChanges.Ip4Address;
+                    let ipInteger = propertyChanges.Ip4Address.value;
                     let byteArray = int32ToByteArray(ipInteger);
-                    propertyChanges.Ip4Address = byteArray.reverse().join('.');
+                    propertyChanges.Ip4Address.value = byteArray.reverse().join('.');
                 }
             }
             Object.assign(this._properties, propertyChanges);
@@ -201,7 +201,7 @@ export class WifiDevice {
                     'org.freedesktop.NetworkManager.AccessPoint',
                 );
                 let accessPointProperties = await getAllProperties(accessPointInterface);
-                accessPointProperties.Ssid = byteArrayToString(accessPointProperties.Ssid);
+                accessPointProperties.Ssid.value = byteArrayToString(accessPointProperties.Ssid.value);
                 this._accessPoints[apPath] = accessPointProperties as AccessPointProperties;
                 this._accessPointsSubject.next(this._accessPoints);
             } catch (_) {

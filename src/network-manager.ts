@@ -1,7 +1,7 @@
-import DBus = require('dbus');
+import DBus from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ConnectionSettingsManager } from './connection-settings-manager';
-import { DeviceType, NetworkManagerProperties } from './dbus-types';
+import { DeviceType, NetworkManagerProperties, Properties } from './dbus-types';
 import { EthernetDevice } from './ethernet-device';
 import { call, getAllProperties, objectInterface, setProperty, signal } from './util';
 import { WifiDevice } from './wifi-device';
@@ -19,11 +19,11 @@ export class NetworkManager {
     private static _wifiDeviceSingleton: WifiDevice;
     private static _connectionSettingsManagerSingleton: ConnectionSettingsManager;
 
-    private static _bus: DBus.DBusConnection;
+    private static _bus: DBus.MessageBus;
 
-    private _networkManagerInterface: DBus.DBusInterface;
+    private _networkManagerInterface: DBus.ClientInterface;
 
-    private _propertiesInterface: DBus.DBusInterface;
+    private _propertiesInterface: DBus.ClientInterface;
     private _properties: NetworkManagerProperties;
     private _propertiesSubject: BehaviorSubject<NetworkManagerProperties>;
 
@@ -36,8 +36,8 @@ export class NetworkManager {
     }
 
     private constructor(
-        networkManagerInterface: DBus.DBusInterface,
-        propertiesInterface: DBus.DBusInterface,
+        networkManagerInterface: DBus.ClientInterface,
+        propertiesInterface: DBus.ClientInterface,
         initialProperties: any,
     ) {
         this._networkManagerInterface = networkManagerInterface;
@@ -63,7 +63,7 @@ export class NetworkManager {
 
         return new Promise<NetworkManager>(async (resolve, reject) => {
             try {
-                NetworkManager._bus = DBus.getBus('system');
+                NetworkManager._bus = DBus.systemBus();
                 let networkManagerInterface = await objectInterface(
                     NetworkManager._bus,
                     '/org/freedesktop/NetworkManager',
@@ -106,7 +106,7 @@ export class NetworkManager {
 
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices', {});
+                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices');
                 const forLoop = async () => {
                     for (let i = 0; i < allDevicePaths.length; i++) {
                         let device = await objectInterface(
@@ -116,7 +116,7 @@ export class NetworkManager {
                         );
                         let properties = await getAllProperties(device);
 
-                        if (properties.DeviceType === DeviceType.WIFI) {
+                        if (properties.DeviceType.value === DeviceType.WIFI) {
                             let wifiDevice = await WifiDevice.init(NetworkManager._bus, allDevicePaths[i]);
                             NetworkManager._wifiDeviceSingleton = wifiDevice;
                             resolve(wifiDevice);
@@ -147,7 +147,7 @@ export class NetworkManager {
 
         return new Promise<EthernetDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices', {});
+                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices');
                 const forLoop = async () => {
                     for (let i = 0; i < allDevicePaths.length; i++) {
                         let device = await objectInterface(
@@ -157,7 +157,7 @@ export class NetworkManager {
                         );
                         let properties = await getAllProperties(device);
 
-                        if (properties.DeviceType === DeviceType.ETHERNET) {
+                        if (properties.DeviceType.value === DeviceType.ETHERNET) {
                             let ethernetDevice = await EthernetDevice.init(NetworkManager._bus, allDevicePaths[i]);
                             NetworkManager._ethernetDeviceSingleton = ethernetDevice;
                             resolve(ethernetDevice);
@@ -205,10 +205,12 @@ export class NetworkManager {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe(async (propertyChangeInfo: any[]) => {
-            let changedProperties: Partial<NetworkManagerProperties> = propertyChangeInfo[1];
-            Object.assign(this._properties, changedProperties);
-            this._propertiesSubject.next(this._properties);
-        });
+        signal(this._propertiesInterface, 'PropertiesChanged').subscribe(
+            async (propertyChangeInfo: Array<Properties>) => {
+                let changedProperties: Partial<NetworkManagerProperties> = propertyChangeInfo[1];
+                Object.assign(this._properties, changedProperties);
+                this._propertiesSubject.next(this._properties);
+            },
+        );
     }
 }

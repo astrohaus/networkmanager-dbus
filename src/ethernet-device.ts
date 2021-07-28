@@ -1,14 +1,14 @@
-import DBus = require('dbus');
+import DBus from 'dbus-next';
 import { BehaviorSubject } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
-import { EthernetDeviceProperties } from './dbus-types';
+import { EthernetDeviceProperties, Properties } from './dbus-types';
 import { getAllProperties, int32ToByteArray, objectInterface, signal } from './util';
 
 /**
  * Manages an ethernet device
  */
 export class EthernetDevice {
-    private _propertiesInterface: DBus.DBusInterface;
+    private _propertiesInterface: DBus.ClientInterface;
     private _properties: EthernetDeviceProperties;
     private _propertiesSubject: BehaviorSubject<EthernetDeviceProperties>;
 
@@ -20,7 +20,7 @@ export class EthernetDevice {
         return this._properties;
     }
 
-    private constructor(propertiesInterface: DBus.DBusInterface, initialProperties: any) {
+    private constructor(propertiesInterface: DBus.ClientInterface, initialProperties: any) {
         this._propertiesInterface = propertiesInterface;
         this._properties = initialProperties;
         this._propertiesSubject = new BehaviorSubject<any>(this._properties);
@@ -36,7 +36,7 @@ export class EthernetDevice {
      * @param bus The system dbus connection
      * @param devicePath The path to the ethernet device DBus object
      */
-    public static async init(bus: DBus.DBusConnection, devicePath: string): Promise<EthernetDevice> {
+    public static async init(bus: DBus.MessageBus, devicePath: string): Promise<EthernetDevice> {
         return new Promise<EthernetDevice>(async (resolve, reject) => {
             try {
                 let deviceInterface = await objectInterface(bus, devicePath, 'org.freedesktop.NetworkManager.Device');
@@ -48,12 +48,12 @@ export class EthernetDevice {
                 let propertiesInterface = await objectInterface(bus, devicePath, 'org.freedesktop.DBus.Properties');
 
                 let deviceProperties = await getAllProperties(deviceInterface);
-                if (deviceProperties.Ip4Address === 0) {
-                    deviceProperties.Ip4Address = null;
+                if (deviceProperties.Ip4Address.value === 0) {
+                    deviceProperties.Ip4Address.value = null;
                 } else {
-                    let ipInteger = deviceProperties.Ip4Address;
+                    let ipInteger = deviceProperties.Ip4Address.value;
                     let byteArray = int32ToByteArray(ipInteger);
-                    deviceProperties.Ip4Address = byteArray.reverse().join('.');
+                    deviceProperties.Ip4Address.value = byteArray.reverse().join('.');
                 }
                 let ethernetDeviceProperties = await getAllProperties(ethernetDeviceInterface);
 
@@ -67,15 +67,15 @@ export class EthernetDevice {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: any[]) => {
+        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: Array<Properties>) => {
             let propertyChanges = propertyChangeInfo[1];
             if (propertyChanges.Ip4Address) {
-                if (propertyChanges.Ip4Address === 0) {
-                    propertyChanges.Ip4Address = null;
+                if (propertyChanges.Ip4Address.value === 0) {
+                    propertyChanges.Ip4Address.value = null;
                 } else {
-                    let ipInteger = propertyChanges.Ip4Address;
+                    let ipInteger = propertyChanges.Ip4Address.value;
                     let byteArray = int32ToByteArray(ipInteger);
-                    propertyChanges.Ip4Address = byteArray.reverse().join('.');
+                    propertyChanges.Ip4Address.value = byteArray.reverse().join('.');
                 }
             }
 

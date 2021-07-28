@@ -2,9 +2,9 @@
 
 ## Credits
 
-### [Node-DBus](https://github.com/Shouqun/node-dbus)
+### [DBus-next](https://github.com/dbusjs/node-dbus-next)
 
-Thanks to [Shouqun](https://github.com/Shouqun) for their fantastic DBus library. This library powers the code that interacts with DBus. I also use their install instructions in this README.
+This library powers the code that interacts with DBus.
 
 ### [Ian's Tech Blog – Fun With NetworkManager](http://cheesehead-techblog.blogspot.com/2012/09/dbus-tutorial-fun-with-network-manager.html)
 
@@ -26,28 +26,8 @@ an Electron app, but it'll work well with any NodeJS app.
 
 _Note_: This has only been tested on Ubuntu Linux. It should work fine on other Linux distros with some setup, and it supposedly works on Mac as well.
 
-First, follow the platform-specific instructions below. These are taken almost word-for-word from [Shouqun's](https://github.com/Shouqun/node-dbus) README for their DBus library:
-
-### Linux
-
 ```terminal
-npm install -g node-gyp
-sudo apt-get install libdbus-1-dev
-sudo apt-get install libglib2.0-dev
-```
-
-### Mac
-
-```terminal
-npm install -g node-gyp
-sudo brew install pkg-config dbus
-sudo brew install glib
-```
-
-Then, you can install this library with:
-
-```terminal
-npm install networkmanager-dbus
+npm install dbus-next networkmanager-dbus
 ```
 
 ## Examples
@@ -84,11 +64,11 @@ let connectionSettingsManager = await networkManager.connectionSettingsManager()
 // Subscribe to WifiDevice properties
 wifiDevice.properties$.subscribe((properties) => {
   console.log(`WiFi Status:`);
-  console.log(`Connection state: ${DeviceState[properties.State]}`);
-  if (properties.ActiveAccessPoint) {
-    if (wifiDevice.accessPoints[properties.ActiveAccessPoint]) {
+  console.log(`Connection state: ${DeviceState[properties.State.value]}`);
+  if (properties.ActiveAccessPoint.value) {
+    if (wifiDevice.accessPoints[properties.ActiveAccessPoint.value]) {
       console.log(`Connected to access point:`);
-      console.log(wifiDevice.accessPoints[properties.ActiveAccessPoint]);
+      console.log(wifiDevice.accessPoints[properties.ActiveAccessPoint.value]);
     } else {
       console.log(`Not connected to a discovered access point`);
     }
@@ -118,7 +98,7 @@ let networkManager = await NetworkManager.init();
 let ethernetDevice = await networkManager.ethernetDevice();
 
 ethernetDevice.properties$.subscribe((properties) => {
-  if (properties.Carrier) {
+  if (properties.Carrier.value) {
     console.log('Cable plugged in');
   } else {
     console.warn('Cable unplugged!');
