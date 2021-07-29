@@ -1,5 +1,6 @@
 import DBus, { Variant } from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { DeepPartial } from 'utility-types';
 import { call, getAllProperties, objectInterface, signal, stringToByteArray } from './util';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -125,19 +126,8 @@ export class ConnectionSettingsManager {
      * @see https://developer.gnome.org/NetworkManager/stable/settings-connection.html
      * @see https://developer.gnome.org/NetworkManager/stable/nm-settings-nmcli.html
      */
-    public addConnectionProfile(connectionSettings: Partial<ConnectionProfile>): Promise<ConnectionProfilePath> {
-        return new Promise<ConnectionProfilePath>(async (resolve, reject) => {
-            try {
-                let connectionProfilePath = await call(
-                    this._connectionSettingsManagerInterface,
-                    'AddConnection',
-                    connectionSettings,
-                );
-                resolve(connectionProfilePath);
-            } catch (err) {
-                reject(err);
-            }
-        });
+    public addConnectionProfile(connectionSettings: DeepPartial<ConnectionProfile>): Promise<ConnectionProfilePath> {
+        return call(this._connectionSettingsManagerInterface, 'AddConnection', connectionSettings);
     }
 
     /**
@@ -148,7 +138,7 @@ export class ConnectionSettingsManager {
      * @returns Promise of the new connection profile's path
      */
     public addWifiWpaConnection(ssid: string, hidden: boolean, password?: string): Promise<ConnectionProfilePath> {
-        let connectionProfile: Partial<ConnectionProfile> = {
+        let connectionProfile: DeepPartial<ConnectionProfile> = {
             connection: {
                 type: new Variant('s', '802-11-wireless'),
                 'interface-name': new Variant('s', 'wlan0'),
