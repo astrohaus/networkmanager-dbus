@@ -1,4 +1,5 @@
 import { NetworkManager } from './network-manager';
+import { AgentManager } from './agent-manager';
 import { WifiDevice } from './wifi-device';
 import { EthernetDevice } from './ethernet-device';
 import { ConnectionSettingsManager } from './connection-settings-manager';
@@ -26,6 +27,7 @@ import {
 
 export {
     NetworkManager,
+    AgentManager,
     WifiDevice,
     EthernetDevice,
     ConnectionSettingsManager,

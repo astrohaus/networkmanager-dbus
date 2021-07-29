@@ -1,5 +1,6 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AgentManager } from './agent-manager';
 import { ConnectionSettingsManager } from './connection-settings-manager';
 import { DeviceType, NetworkManagerProperties, Properties } from './dbus-types';
 import { EthernetDevice } from './ethernet-device';
@@ -18,6 +19,7 @@ export class NetworkManager {
     private static _ethernetDeviceSingleton: EthernetDevice;
     private static _wifiDeviceSingleton: WifiDevice;
     private static _connectionSettingsManagerSingleton: ConnectionSettingsManager;
+    private static _agentManagerSingleton: AgentManager;
 
     private static _bus: DBus.MessageBus;
 
@@ -194,6 +196,25 @@ export class NetworkManager {
                 reject(err);
             }
         });
+    }
+
+    /**
+     * Initializes and retusn a new AgentManager.
+     *
+     * AgentManager is a singleton, so subsequent calls will return the same object.
+     *
+     * @returns Promise of a new AgentManager
+     */
+    public async agentManager(): Promise<AgentManager> {
+        // If the singleton exists, return it and exit
+        if (NetworkManager._agentManagerSingleton) {
+            return Promise.resolve(NetworkManager._agentManagerSingleton);
+        }
+
+        const agentManager = await AgentManager.init(NetworkManager._bus);
+        NetworkManager._agentManagerSingleton = agentManager;
+
+        return agentManager;
     }
 
     /**
