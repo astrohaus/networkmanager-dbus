@@ -1,8 +1,10 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { DeepPartial } from 'utility-types';
 import { AgentManager } from './agent-manager';
+import { BaseDevice } from './base-device';
 import { ConnectionSettingsManager } from './connection-settings-manager';
-import { DeviceType, NetworkManagerProperties, Properties } from './dbus-types';
+import { ConnectionProfile, DeviceType, NetworkManagerProperties, Properties } from './dbus-types';
 import { EthernetDevice } from './ethernet-device';
 import { call, getAllProperties, objectInterface, setProperty, signal } from './util';
 import { WifiDevice } from './wifi-device';
@@ -223,6 +225,37 @@ export class NetworkManager {
      */
     public enableWireless(enable: boolean) {
         setProperty(this._networkManagerInterface, 'WirelessEnabled', enable);
+    }
+
+    /**
+     * Adds a new connection using the given details (if any) as a template (automatically
+     * filling in missing settings with the capabilities of the given device and specific
+     * object), then activate the new connection. Cannot be used for VPN connections at this time.
+     *
+     * @param connectionSettings
+     * Connection settings and properties; if incomplete missing settings will be
+     * automatically completed using the given device and specific object.
+     * @param device
+     * The object path of device to be activated using the given connection.
+     * @param objectPath
+     * The path of a connection-type-specific object this activation should use. This
+     * parameter is currently ignored for wired and mobile broadband connections, and the
+     * value of "/" should be used (ie, no specific object). For Wi-Fi connections, pass
+     * the object path of a specific AP from the card's scan list, which will be used to
+     * complete the details of the newly added connection.
+     */
+    public addAndActivateConnection(
+        connectionSettings: DeepPartial<ConnectionProfile>,
+        device: BaseDevice,
+        objectPath: string,
+    ) {
+        return call(
+            this._networkManagerInterface,
+            'AddAndActivateConnection',
+            connectionSettings,
+            device.devicePath,
+            objectPath,
+        );
     }
 
     private _listenForPropertyChanges() {

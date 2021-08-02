@@ -1,6 +1,7 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
+import { BaseDevice } from './base-device';
 import { AccessPointProperties, ConnectionProfilePath, Properties, WifiDeviceProperties } from './dbus-types';
 import { byteArrayToString, call, getAllProperties, int32ToByteArray, objectInterface, signal } from './util';
 
@@ -8,10 +9,7 @@ type AccessPointMap = {
     [key: string]: AccessPointProperties;
 };
 
-export class WifiDevice {
-    private _bus: DBus.MessageBus;
-    private _devicePath: string;
-
+export class WifiDevice extends BaseDevice {
     private _wifiDeviceInterface: DBus.ClientInterface;
 
     private _propertiesInterface: DBus.ClientInterface;
@@ -49,8 +47,7 @@ export class WifiDevice {
         initialProperties: any,
         initialAccessPoints: AccessPointMap,
     ) {
-        this._bus = bus;
-        this._devicePath = devicePath;
+        super(bus, devicePath);
 
         this._wifiDeviceInterface = wifiDeviceInterface;
 
@@ -164,7 +161,7 @@ export class WifiDevice {
                     networkManagerInterface,
                     'ActivateConnection',
                     connectionProfilePath,
-                    this._devicePath,
+                    this.devicePath,
                     '/',
                 );
                 resolve(activeConnectionPath);

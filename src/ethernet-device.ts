@@ -1,13 +1,14 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject } from 'rxjs';
 import { Observable } from 'rxjs/internal/Observable';
+import { BaseDevice } from './base-device';
 import { EthernetDeviceProperties, Properties } from './dbus-types';
 import { getAllProperties, int32ToByteArray, objectInterface, signal } from './util';
 
 /**
  * Manages an ethernet device
  */
-export class EthernetDevice {
+export class EthernetDevice extends BaseDevice {
     private _propertiesInterface: DBus.ClientInterface;
     private _properties: EthernetDeviceProperties;
     private _propertiesSubject: BehaviorSubject<EthernetDeviceProperties>;
@@ -20,7 +21,14 @@ export class EthernetDevice {
         return this._properties;
     }
 
-    private constructor(propertiesInterface: DBus.ClientInterface, initialProperties: any) {
+    private constructor(
+        bus: DBus.MessageBus,
+        devicePath: string,
+        propertiesInterface: DBus.ClientInterface,
+        initialProperties: any,
+    ) {
+        super(bus, devicePath);
+
         this._propertiesInterface = propertiesInterface;
         this._properties = initialProperties;
         this._propertiesSubject = new BehaviorSubject<any>(this._properties);
@@ -59,7 +67,7 @@ export class EthernetDevice {
 
                 let initialProperties = { ...deviceProperties, ...ethernetDeviceProperties };
 
-                resolve(new EthernetDevice(propertiesInterface, initialProperties));
+                resolve(new EthernetDevice(bus, devicePath, propertiesInterface, initialProperties));
             } catch (error) {
                 reject(`Error creating wifi device: ${error}`);
             }
