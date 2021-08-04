@@ -1,5 +1,7 @@
 # NetworkManager DBus Client for NodeJS
 
+Forked from https://gitlab.com/dropworks-oss/networkmanager-dbus
+
 ## Credits
 
 ### [DBus-next](https://github.com/dbusjs/node-dbus-next)
