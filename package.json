@@ -1,6 +1,6 @@
 {
   "name": "networkmanager-dbus",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A nodejs interface to communicate with NetworkManager via DBus",
   "author": "Bailey Blankenship <bailey.blankenship@dropworks.com>",
   "main": "lib/index.js",
@@ -19,7 +19,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/dropworks-oss/networkmanager-dbus"
+    "url": "https://github.com/astrohaus/networkmanager-dbus"
   },
   "license": "MIT",
   "devDependencies": {
