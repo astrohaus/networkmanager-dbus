@@ -1,4 +1,5 @@
 import { Variant } from 'dbus-next';
+import { Omit } from 'utility-types';
 
 /**
  * The type of a device enumerated by Network Manager
@@ -612,11 +613,11 @@ export interface Properties {
 }
 
 /**
- * Wi-Fi Access Point
+ * WiFi Access Point properties returned by DBus.
  *
  * @link https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.AccessPoint.html
  */
-export interface AccessPointProperties extends Properties {
+export interface RawAccessPointProperties extends Properties {
     /**
      * Flags describing the capabilities of the access point.
      *
@@ -640,7 +641,7 @@ export interface AccessPointProperties extends Properties {
 
     //Returns: NM80211ApSecurityFlags
     /** The Service Set Identifier identifying the access point. */
-    Ssid: Variant<string>;
+    Ssid: Variant<number[]>;
 
     /** The radio channel frequency in use by the access point, in MHz. */
     Frequency: Variant<number>;
@@ -660,6 +661,15 @@ export interface AccessPointProperties extends Properties {
 
     /** The timestamp (in CLOCK_BOOTTIME seconds) for the last time the access point was found in scan results. A value of -1 means the access point has never been found in scan results. */
     LastSeen: Variant<number>;
+}
+
+/**
+ * Processed WiFi Access Point properties.
+ */
+export interface AccessPointProperties extends Omit<RawAccessPointProperties, 'Ssid'> {
+    //Returns: NM80211ApSecurityFlags
+    /** The Service Set Identifier identifying the access point. */
+    Ssid: Variant<string>;
 }
 
 /**
@@ -801,7 +811,10 @@ export interface ConnectionSettingsManagerProperties extends Properties {
     CanModify: Variant<boolean>;
 }
 
-interface DeviceProperties extends Properties {
+/**
+ * Device properties returned by DBus.
+ */
+export interface RawDeviceProperties extends Properties {
     /** Operating-system specific transient device hardware identifier. This is an opaque string representing the underlying hardware for the device, and shouldn't be used to keep track of individual devices. For some device types (Bluetooth, Modems) it is an identifier used by the hardware service (ie bluez or ModemManager) to refer to that device, and client programs use it get additional information from those services which NM does not provide. The Udi is not guaranteed to be consistent across reboots or hotplugs of the hardware. If you're looking for a way to uniquely track each device in your application, use the object path. If you're looking for a way to track a specific piece of hardware across reboot or hotplug, use a MAC address or USB serial number. Note that non-UTF-8 characters are backslash escaped. Use g_strcompress() to obtain the true (non-UTF-8) string. */
     Udi: Variant<string>;
 
@@ -827,7 +840,7 @@ interface DeviceProperties extends Properties {
     Capabilities: Variant<number>;
 
     /** IPv4 address of the device */
-    Ip4Address: Variant<string | null>;
+    Ip4Address: Variant<number>;
 
     /** The current state of the device. */
     State: Variant<DeviceState>;
@@ -894,6 +907,14 @@ interface DeviceProperties extends Properties {
 
     /** The hardware address of the device. This replaces the other 'HwAddress' properties on the device-specific D-Bus interfaces. */
     HwAddress: Variant<string>;
+}
+
+/**
+ * Processed device properties
+ */
+export interface DeviceProperties extends Omit<RawDeviceProperties, 'Ip4Address'> {
+    /** IPv4 address of the device */
+    Ip4Address: Variant<string | null>;
 }
 
 /**

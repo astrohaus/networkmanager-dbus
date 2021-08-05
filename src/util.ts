@@ -1,5 +1,6 @@
 import DBus from 'dbus-next';
 import { Observable } from 'rxjs';
+import { Properties } from './dbus-types';
 
 export async function objectInterface(
     bus: DBus.MessageBus,
@@ -77,9 +78,9 @@ export async function setProperty(
     }
 }
 
-export async function getAllProperties(
+export async function getAllProperties<TPropetries extends Properties = Properties>(
     objectInterface: DBus.ClientInterface,
-): Promise<Record<string, DBus.Variant<any>>> {
+): Promise<TPropetries> {
     const object = objectInterface.$object as unknown as DBus.ProxyObject;
     const propertiesInterface = getPropertiesInterface(object);
 
@@ -110,4 +111,14 @@ export function int32ToByteArray(int: number): Uint8Array {
     new DataView(byteArray).setUint32(0, int, false); // byteOffset = 0; litteEndian = false
 
     return new Uint8Array(byteArray);
+}
+
+export function formatIp4Address(ipAddress: number) {
+    if (ipAddress === 0) {
+        return null;
+    }
+
+    const byteArray = int32ToByteArray(ipAddress);
+
+    return byteArray.reverse().join('.');
 }
