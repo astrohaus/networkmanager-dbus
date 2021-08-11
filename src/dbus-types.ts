@@ -970,6 +970,38 @@ export interface EthernetDeviceProperties extends DeviceProperties {
     Carrier: Variant<boolean>;
 }
 
+/**
+ * https://developer-old.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.IP4Config.html
+ */
+export interface Ip4ConfigProperties extends Properties {
+    /** Array of arrays of IPv4 address/prefix/gateway. All 3 elements of each array are in network byte order. Essentially: [(addr, prefix, gateway), (addr, prefix, gateway), ...] Deprecated: use AddressData and Gateway */
+    Addresses: Variant<number[][]>;
+    /** Array of IP address data objects. All addresses will include "address" (an IP address string), and "prefix" (a uint). Some addresses may include additional attributes. */
+    AddressData: Variant<Record<string, Variant>[]>;
+    /** The gateway in use. */
+    Gateway: Variant<string>;
+    /** Arrays of IPv4 route/prefix/next-hop/metric. All 4 elements of each tuple are in network byte order. 'route' and 'next hop' are IPv4 addresses, while prefix and metric are simple unsigned integers. Essentially: [(route, prefix, next-hop, metric), (route, prefix, next-hop, metric), ...] Deprecated: use RouteData */
+    Routes: Variant<number[][]>;
+    /** Array of IP route data objects. All routes will include "dest" (an IP address string) and "prefix" (a uint). Some routes may include "next-hop" (an IP address string), "metric" (a uint), and additional attributes. */
+    RouteData: Variant<Record<string, Variant>[]>;
+    /** The nameservers in use. Deprecated: use NameserverData */
+    Nameservers: Variant<number[]>;
+    /** The nameservers in use. Currently, only the value "address" is recognized (with an IP address string). */
+    NameserverData: Variant<Record<string, Variant>[]>;
+    /** A list of domains this address belongs to. */
+    Domains: Variant<string[]>;
+    /** A list of dns searches. */
+    Searches: Variant<string[]>;
+    /** A list of DNS options that modify the behavior of the DNS resolver. See resolv.conf(5) manual page for the list of supported options. */
+    DnsOptions: Variant<string[]>;
+    /** The relative priority of DNS servers. */
+    DnsPriority: Variant<number>;
+    /** The Windows Internet Name Service servers associated with the connection. Each address is in network byte order. Deprecated: use WinsServerData */
+    WinsServers: Variant<number[]>;
+    /** The Windows Internet Name Service servers associated with the connection. */
+    WinsServerData: Variant<string[]>;
+}
+
 export type ConnectionProfilePath = string;
 export type ActiveConnectionPath = string;
 export type DevicePath = string;

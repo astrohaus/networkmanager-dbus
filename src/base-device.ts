@@ -1,6 +1,6 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { DeviceProperties, RawDeviceProperties } from './dbus-types';
+import { DeviceProperties, Ip4ConfigProperties, RawDeviceProperties } from './dbus-types';
 import { call, formatIp4Address, getAllProperties, objectInterface, signal } from './util';
 
 /**
@@ -68,6 +68,27 @@ export abstract class BaseDevice<TProperties extends DeviceProperties = DevicePr
      */
     public async disconnect(): Promise<void> {
         return await call(this._deviceInterface, 'Disconnect');
+    }
+
+    /**
+     * Gets all IP4Config properties.
+     */
+    public async getIp4ConfigProperties(): Promise<Ip4ConfigProperties | undefined> {
+        const ipConfigPath = this.properties.Ip4Config && this.properties.Ip4Config.value;
+
+        if (!ipConfigPath) {
+            return;
+        }
+
+        const ipConfigInterface = await objectInterface(
+            this._bus,
+            ipConfigPath,
+            'org.freedesktop.NetworkManager.IP4Config',
+        );
+
+        const ipConfigProperties = await getAllProperties<Ip4ConfigProperties>(ipConfigInterface);
+
+        return ipConfigProperties;
     }
 
     private _listenForPropertyChanges() {
