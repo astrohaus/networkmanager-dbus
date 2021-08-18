@@ -32,13 +32,20 @@ export class NetworkManager extends Signaler {
     private _propertiesInterface: DBus.ClientInterface;
     private _properties: NetworkManagerProperties;
     private _propertiesSubject: BehaviorSubject<NetworkManagerProperties>;
-
     /** Continuously updated NetworkManager properties */
     public properties$: Observable<NetworkManagerProperties>;
+
+    private _devicesSubject: BehaviorSubject<string[]>;
+    /** The list of currently available devices (paths). */
+    public devices$: Observable<string[]>;
 
     /** One-time value of latest NetworkManager properties */
     public get properties(): NetworkManagerProperties {
         return this._properties;
+    }
+
+    public get devices(): string[] {
+        return this._devicesSubject.value;
     }
 
     private constructor(
@@ -46,6 +53,7 @@ export class NetworkManager extends Signaler {
         networkManagerInterface: DBus.ClientInterface,
         propertiesInterface: DBus.ClientInterface,
         initialProperties: any,
+        initialDevices: string[],
     ) {
         super();
 
@@ -57,6 +65,10 @@ export class NetworkManager extends Signaler {
         this._propertiesSubject = new BehaviorSubject<any>(this._properties);
         this.properties$ = this._propertiesSubject.asObservable();
 
+        this._devicesSubject = new BehaviorSubject<string[]>(initialDevices);
+        this.devices$ = this._devicesSubject.asObservable();
+
+        this._listenDevices();
         this._listenForPropertyChanges();
     }
 
@@ -88,11 +100,14 @@ export class NetworkManager extends Signaler {
                 );
                 const initialProperties = await getAllProperties(networkManagerInterface);
 
+                const initialDevices = await call<string[]>(networkManagerInterface, 'GetAllDevices');
+
                 const networkManager = new NetworkManager(
                     NetworkManager._bus,
                     networkManagerInterface,
                     propertiesInterface,
                     initialProperties,
+                    initialDevices,
                 );
 
                 NetworkManager._networkManagerSingleton = networkManager;
@@ -164,14 +179,10 @@ export class NetworkManager extends Signaler {
 
         return new Promise<WifiDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices');
+                let allDevicePaths = this.devices;
                 const forLoop = async () => {
                     for (let i = 0; i < allDevicePaths.length; i++) {
-                        let device = await objectInterface(
-                            NetworkManager._bus,
-                            allDevicePaths[i],
-                            'org.freedesktop.NetworkManager.Device',
-                        );
+                        let device = await this.getDevice(allDevicePaths[i]);
                         let properties = await getAllProperties(device);
 
                         if (properties.DeviceType.value === DeviceType.WIFI) {
@@ -205,14 +216,10 @@ export class NetworkManager extends Signaler {
 
         return new Promise<EthernetDevice>(async (resolve, reject) => {
             try {
-                let allDevicePaths: string[] = await call(this._networkManagerInterface, 'GetAllDevices');
+                let allDevicePaths = this.devices;
                 const forLoop = async () => {
                     for (let i = 0; i < allDevicePaths.length; i++) {
-                        let device = await objectInterface(
-                            NetworkManager._bus,
-                            allDevicePaths[i],
-                            'org.freedesktop.NetworkManager.Device',
-                        );
+                        let device = await this.getDevice(allDevicePaths[i]);
                         let properties = await getAllProperties(device);
 
                         if (properties.DeviceType.value === DeviceType.ETHERNET) {
@@ -281,6 +288,16 @@ export class NetworkManager extends Signaler {
         setProperty(this._networkManagerInterface, 'WirelessEnabled', enable);
     }
 
+    /** Gets DBus interface for a device. */
+    public async getDevice(devicePath: string) {
+        return await objectInterface(this._bus, devicePath, 'org.freedesktop.NetworkManager.Device');
+    }
+
+    /** Gets the list of all network devices. */
+    public async getAllDevices() {
+        return await call<string[]>(this._networkManagerInterface, 'GetAllDevices');
+    }
+
     /**
      * Adds a new connection using the given details (if any) as a template (automatically
      * filling in missing settings with the capabilities of the given device and specific
@@ -310,6 +327,27 @@ export class NetworkManager extends Signaler {
             device.devicePath,
             objectPath,
         );
+    }
+
+    private _listenDevices() {
+        this.listenSignal(this._networkManagerInterface, 'DeviceAdded', async ([devicePath]: [string]) => {
+            this._devicesSubject.next([...this.devices, devicePath]);
+        });
+
+        this.listenSignal(this._networkManagerInterface, 'DeviceRemoved', ([devicePath]: [string]) => {
+            if (NetworkManager._wifiDeviceSingleton && NetworkManager._wifiDeviceSingleton.devicePath === devicePath) {
+                this.destroyWifiDevice();
+            }
+
+            if (
+                NetworkManager._ethernetDeviceSingleton &&
+                NetworkManager._ethernetDeviceSingleton.devicePath === devicePath
+            ) {
+                this.destroyEthernetDevice();
+            }
+
+            this._devicesSubject.next(this.devices.filter((path) => path !== devicePath));
+        });
     }
 
     private _listenForPropertyChanges() {
