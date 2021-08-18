@@ -147,7 +147,7 @@ export class WifiDevice extends BaseDevice<WifiDeviceProperties> {
     }
 
     private _listenForAccessPoints() {
-        signal(this._wifiDeviceInterface, 'AccessPointAdded').subscribe(async (params: any[]) => {
+        this.listenSignal(this._wifiDeviceInterface, 'AccessPointAdded', async (params: any[]) => {
             try {
                 const apPath: string = params[0];
                 const accessPointInterface = await objectInterface(
@@ -171,7 +171,7 @@ export class WifiDevice extends BaseDevice<WifiDeviceProperties> {
             }
         });
 
-        signal(this._wifiDeviceInterface, 'AccessPointRemoved').subscribe(async (params: any[]) => {
+        this.listenSignal(this._wifiDeviceInterface, 'AccessPointRemoved', async (params: any[]) => {
             const apPath = params[0];
             const { [apPath]: deletedAp, ...filteredAccessPoints } = this._accessPoints;
 

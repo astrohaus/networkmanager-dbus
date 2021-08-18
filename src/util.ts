@@ -16,9 +16,12 @@ export async function objectInterface(
     }
 }
 
-export function signal(objectInterface: DBus.ClientInterface, signalName: string): Observable<any[]> {
-    return new Observable<any>((observer) => {
-        const listener = (...args: any[]) => {
+export function signal<T extends Array<any> = any[]>(
+    objectInterface: DBus.ClientInterface,
+    signalName: string,
+): Observable<T> {
+    return new Observable<T>((observer) => {
+        const listener = (...args: T) => {
             observer.next(args);
         };
 
@@ -31,7 +34,11 @@ export function signal(objectInterface: DBus.ClientInterface, signalName: string
     });
 }
 
-export async function call(objectInterface: DBus.ClientInterface, methodName: string, ...args: any[]): Promise<any> {
+export async function call<T = any>(
+    objectInterface: DBus.ClientInterface,
+    methodName: string,
+    ...args: any[]
+): Promise<T> {
     try {
         const result = await objectInterface[methodName](...args);
         return result;

@@ -1,12 +1,13 @@
 import DBus from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeviceProperties, Ip4ConfigProperties, RawDeviceProperties } from './dbus-types';
-import { call, formatIp4Address, getAllProperties, objectInterface, signal } from './util';
+import { Signaler } from './signaler';
+import { call, formatIp4Address, getAllProperties, objectInterface } from './util';
 
 /**
  * Abstract class for all NetworkManager devices.
  */
-export abstract class BaseDevice<TProperties extends DeviceProperties = DeviceProperties> {
+export abstract class BaseDevice<TProperties extends DeviceProperties = DeviceProperties> extends Signaler {
     protected _bus: DBus.MessageBus;
 
     protected _propertiesInterface: DBus.ClientInterface;
@@ -24,6 +25,8 @@ export abstract class BaseDevice<TProperties extends DeviceProperties = DevicePr
         propertiesInterface: DBus.ClientInterface,
         initialProperties: any,
     ) {
+        super();
+
         this._bus = bus;
 
         this.devicePath = devicePath;
@@ -92,8 +95,10 @@ export abstract class BaseDevice<TProperties extends DeviceProperties = DevicePr
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe(
-            (propertyChangeInfo: Array<Partial<RawDeviceProperties>>) => {
+        this.listenSignal<Partial<RawDeviceProperties>[]>(
+            this._propertiesInterface,
+            'PropertiesChanged',
+            (propertyChangeInfo) => {
                 const { Ip4Address: changedIpAddress, ...propertyChanges } = propertyChangeInfo[1];
 
                 if (changedIpAddress) {

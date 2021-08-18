@@ -1,7 +1,7 @@
 import DBus, { Variant } from 'dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeepPartial } from 'utility-types';
-import { call, getAllProperties, objectInterface, signal, stringToByteArray } from './util';
+import { call, getAllProperties, objectInterface, stringToByteArray } from './util';
 import { v4 as uuidv4 } from 'uuid';
 import {
     ConnectionProfile,
@@ -9,13 +9,14 @@ import {
     ConnectionSettingsManagerProperties,
     Properties,
 } from './dbus-types';
+import { Signaler } from './signaler';
 
 /**
  * Manages the saving and retrieving of connection profiles and the device's hostname
  * When connecting to a network (wired or wireless), you must provide a connection profile
  * by either creating one with `addConnectionProfile()` or using a saved connection profile.
  */
-export class ConnectionSettingsManager {
+export class ConnectionSettingsManager extends Signaler {
     private _bus: DBus.MessageBus;
     private _connectionSettingsManagerInterface: DBus.ClientInterface;
     private _propertiesInterface: DBus.ClientInterface;
@@ -48,6 +49,8 @@ export class ConnectionSettingsManager {
         initialProperties: any,
         initialConnectionProfiles: any,
     ) {
+        super();
+
         this._bus = bus;
         this._connectionSettingsManagerInterface = connectionSettingsManagerInterface;
 
@@ -195,7 +198,7 @@ export class ConnectionSettingsManager {
     }
 
     private _listenForPropertyChanges() {
-        signal(this._propertiesInterface, 'PropertiesChanged').subscribe((propertyChangeInfo: Array<Properties>) => {
+        this.listenSignal(this._propertiesInterface, 'PropertiesChanged', (propertyChangeInfo: Array<Properties>) => {
             let changedProperties = propertyChangeInfo[1];
             Object.assign(this._properties, changedProperties);
             this._propertiesSubject.next(this._properties);
@@ -203,7 +206,7 @@ export class ConnectionSettingsManager {
     }
 
     private _listenForConnections() {
-        signal(this._connectionSettingsManagerInterface, 'NewConnection').subscribe(async (signal: any[]) => {
+        this.listenSignal(this._connectionSettingsManagerInterface, 'NewConnection', async (signal: any[]) => {
             let newConnectionPath = signal[0];
             let connectionProfileInterface = await objectInterface(
                 this._bus,
@@ -214,7 +217,7 @@ export class ConnectionSettingsManager {
             this._connectionProfilesSubject.next(this._connectionProfiles);
         });
 
-        signal(this._connectionSettingsManagerInterface, 'ConnectionRemoved').subscribe(async (signal: any[]) => {
+        this.listenSignal(this._connectionSettingsManagerInterface, 'ConnectionRemoved', async (signal: any[]) => {
             let removedConnectionPath = signal[0];
             delete this._connectionProfiles[removedConnectionPath];
             this._connectionProfilesSubject.next(this._connectionProfiles);
