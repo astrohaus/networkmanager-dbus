@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "node lib/test.js",
     "debug": "npm run build && node --inspect lib/test.js",
-    "prepublish": "npm run build",
+    "prepack": "npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
