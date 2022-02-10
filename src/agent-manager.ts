@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { call, objectInterface } from './util';
 
 export class AgentManager {

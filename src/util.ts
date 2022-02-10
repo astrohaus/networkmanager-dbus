@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { Observable } from 'rxjs';
 import { Properties } from './dbus-types';
 

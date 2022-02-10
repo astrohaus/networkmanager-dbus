@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeepPartial } from 'utility-types';
 import { AgentManager } from './agent-manager';

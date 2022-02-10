@@ -1,4 +1,4 @@
-import { Variant } from 'dbus-next';
+import { Variant } from '@astrohaus/dbus-next';
 import { Omit } from 'utility-types';
 
 /**

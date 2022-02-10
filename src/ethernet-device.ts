@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { BaseDevice } from './base-device';
 import { EthernetDeviceProperties } from './dbus-types';
 

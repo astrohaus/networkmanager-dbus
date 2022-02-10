@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeviceProperties, Ip4ConfigProperties, RawDeviceProperties } from './dbus-types';
 import { Signaler } from './signaler';

@@ -1,4 +1,4 @@
-import DBus, { Variant } from 'dbus-next';
+import DBus, { Variant } from '@astrohaus/dbus-next';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeepPartial } from 'utility-types';
 import { call, getAllProperties, objectInterface, stringToByteArray } from './util';

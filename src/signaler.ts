@@ -1,4 +1,4 @@
-import DBus from 'dbus-next';
+import DBus from '@astrohaus/dbus-next';
 import { PartialObserver, Subscription } from 'rxjs';
 import { signal } from './util';
 
