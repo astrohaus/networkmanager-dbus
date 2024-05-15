@@ -16,13 +16,13 @@ export async function objectInterface(
     }
 }
 
-export function signal<T extends Array<any> = any[]>(
+export function signal<T extends any[] = any[]>(
     objectInterface: DBus.ClientInterface,
     signalName: string,
 ): Observable<T> {
     return new Observable<T>((observer) => {
-        const listener = (...args: T) => {
-            observer.next(args);
+        const listener = (...args: any[]) => {
+            observer.next(args as T);
         };
 
         objectInterface.on(signalName, listener);
@@ -128,4 +128,10 @@ export function formatIp4Address(ipAddress: number) {
     const byteArray = int32ToByteArray(ipAddress);
 
     return byteArray.reverse().join('.');
+}
+
+export function formatMacAddress(macAddress: number[]): string {
+    const hexStrings = Array.from(macAddress).map(num => num.toString(16).padStart(2, '0'));
+
+    return hexStrings.join(':').toUpperCase();
 }

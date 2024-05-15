@@ -672,6 +672,61 @@ export interface AccessPointProperties extends Omit<RawAccessPointProperties, 'S
     Ssid: Variant<string>;
 }
 
+export interface WpaSupplicantProperties extends Properties {
+    /**
+     * Flags describing the capabilities of the access point.
+     *
+     * @see AccessPointFlags
+     * */
+    SSID: Variant<number[]>;
+
+    /**
+     * Flags describing the access point's capabilities according to WPA (Wifi Protected Access).
+     *
+     * @see AccessPointSecurityFlags
+     * */
+    BSSID: Variant<number[]>;
+
+    /**
+     * Flags describing the access point's capabilities according to the RSN (Robust Secure Network) protocol.
+     *
+     * @see AccessPointSecurityFlags
+     *  */
+    Privacy: Variant<boolean>;
+
+    /** The Service Set Identifier identifying the access point. */
+    Mode: Variant<string>;
+
+    /** The radio channel frequency in use by the access point, in MHz. */
+    Signal: Variant<number>;
+
+    /** The hardware address (BSSID) of the access point. */
+    Frequency: Variant<number>;
+
+    /** Describes the operating mode of the access point. */
+    Rates: Variant<number[]>;
+
+    //Returns: NM80211Mode
+    /** The maximum bitrate this access point is capable of, in kilobits/second (Kb/s). */
+    KeyMgmt: Variant<string[]>;
+
+    /** The current signal quality of the access point, in percent. */
+    Group: Variant<string>;
+
+    /** The timestamp (in CLOCK_BOOTTIME seconds) for the last time the access point was found in scan results. A value of -1 means the access point has never been found in scan results. */
+    Pairwise: Variant<string[]>;
+
+    MgmtGroup: Variant<string>;
+
+    Age: Variant<number>;
+
+    IEs: Variant<number[]>;
+
+    WPA: Variant<any>;
+    RSN: Variant<any>;
+    WPS: Variant<any>;
+}
+
 /**
  * Properties for the NetworkManager
  * @see https://developer.gnome.org/NetworkManager/stable/gdbus-org.freedesktop.NetworkManager.html
@@ -777,6 +832,7 @@ export interface NetworkManagerProperties extends Properties {
 export interface ConnectionProfile {
     /** https://developer.gnome.org/NetworkManager/stable/settings-connection.html */
     connection: {
+        autoconnect: Variant<boolean>;
         id: Variant<string>;
         'interface-name': Variant<string>;
         type: Variant<'802-11-wireless' | '802-3-ethernet'>;

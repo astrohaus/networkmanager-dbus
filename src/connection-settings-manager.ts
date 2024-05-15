@@ -140,9 +140,10 @@ export class ConnectionSettingsManager extends Signaler {
      * @param password The password of the network
      * @returns Promise of the new connection profile's path
      */
-    public addWifiWpaConnection(ssid: string, hidden: boolean, password?: string): Promise<ConnectionProfilePath> {
+    public addWifiWpaConnection(ssid: string, hidden: boolean, password?: string, mode?: string, keyMgmt?: string): Promise<ConnectionProfilePath> {
         let connectionProfile: DeepPartial<ConnectionProfile> = {
             connection: {
+                autoconnect: new Variant('b', false),
                 type: new Variant('s', '802-11-wireless'),
                 'interface-name': new Variant('s', 'wlan0'),
                 uuid: new Variant('s', uuidv4()),
@@ -150,7 +151,7 @@ export class ConnectionSettingsManager extends Signaler {
             },
             '802-11-wireless': {
                 ssid: new Variant('ay', stringToByteArray(ssid)),
-                mode: new Variant('s', 'infrastructure'),
+                mode: new Variant('s', mode ? mode : 'infrastructure'),
             },
             ipv4: {
                 method: new Variant('s', 'auto'),
@@ -162,7 +163,7 @@ export class ConnectionSettingsManager extends Signaler {
 
         if (password) {
             connectionProfile['802-11-wireless-security'] = {
-                'key-mgmt': new Variant('s', 'wpa-psk'),
+                'key-mgmt': new Variant('s', keyMgmt ? keyMgmt : 'wpa-psk'),
                 'auth-alg': new Variant('s', 'open'),
                 psk: new Variant('s', password),
             };
